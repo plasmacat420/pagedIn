@@ -1,6 +1,11 @@
 """
-Resume parsing via Groq API (fast open-source model inference).
-Extracts structured data from raw resume text.
+Document parsing + enhancement via Groq (Llama-3.3-70b).
+
+Handles two document types:
+  - resume: extracts, categorises skills, rewrites bullets, writes summary
+  - business: extracts brand info and writes compelling copy
+
+Returns structured JSON with a `doc_type` field that drives template selection.
 """
 import json
 import logging
@@ -14,68 +19,131 @@ client = AsyncOpenAI(
     base_url="https://api.groq.com/openai/v1",
 )
 
-PARSE_SYSTEM_PROMPT = """You are an expert resume parser. Extract structured data from the provided resume text and return it as valid JSON.
+# ── Prompts ────────────────────────────────────────────────────────────────
 
-Always return a JSON object with exactly these fields (use empty string or empty array if data is missing):
+SYSTEM_PROMPT = """You are an expert content strategist, resume coach, and brand copywriter.
+
+Your job is to read a document and return a single JSON object — no markdown, no explanation.
+
+STEP 1 — Determine document type:
+- "resume": a personal CV / resume listing work history, skills, education
+- "business": a company brochure, pitch deck, one-pager, service menu, business profile
+
+STEP 2 — Extract and ENHANCE based on type.
+
+═══════════════════════════════════════════
+IF RESUME — return exactly this shape:
+═══════════════════════════════════════════
 {
+  "doc_type": "resume",
   "name": "Full Name",
-  "title": "Professional Title / Current Role",
-  "summary": "2-4 sentence professional summary",
-  "email": "email@example.com",
-  "phone": "phone number or empty string",
-  "location": "City, State or empty string",
-  "linkedin": "LinkedIn URL or empty string",
-  "github": "GitHub URL or empty string",
-  "website": "personal website URL or empty string",
-  "skills": ["skill1", "skill2", ...],
+  "title": "Professional Title (e.g. Senior Software Engineer)",
+  "summary": "Write a compelling 2–3 sentence professional summary. Lead with their strongest trait, mention key technologies/domains, end with value they bring. Never start with 'I'.",
+  "email": "email or empty string",
+  "phone": "phone or empty string",
+  "location": "City, Country or empty string",
+  "linkedin": "full URL or empty string",
+  "github": "full URL or empty string",
+  "website": "full URL or empty string",
+  "skills": {
+    "CategoryName": ["skill1", "skill2"],
+    "AnotherCategory": ["skill3"]
+  },
   "experience": [
     {
       "company": "Company Name",
       "role": "Job Title",
       "start": "Month Year",
       "end": "Month Year or Present",
-      "location": "City, State or Remote",
-      "bullets": ["achievement 1", "achievement 2", ...]
+      "location": "City or Remote",
+      "bullets": [
+        "Strong rewritten bullet: action verb → specific contribution → measurable result. Max 140 chars.",
+        "Another strong bullet"
+      ]
     }
   ],
   "education": [
     {
       "institution": "School Name",
-      "degree": "Degree and Field",
+      "degree": "Degree, Field",
       "start": "Year",
       "end": "Year or Present",
       "gpa": "GPA or empty string",
-      "notes": "honors, activities, or empty string"
+      "notes": "Honors, relevant coursework, or empty"
     }
   ],
-  "certifications": ["Certification Name (Year)", ...]
+  "certifications": ["Cert Name (Issuer, Year)"]
 }
 
-Rules:
-- Keep bullets concise and impactful — max 120 characters each
-- Extract ALL skills mentioned anywhere in the resume
-- Sort experience from most recent to oldest
-- If a summary is not in the resume, write a compelling one based on the content
-- Return ONLY the JSON object, no markdown, no explanation
-"""
+RESUME enhancement rules:
+- skills: group into logical categories (Languages, Frameworks, Tools, Cloud & DevOps, Databases, etc.). Never leave uncategorized.
+- bullets: rewrite every bullet. Format = [Strong action verb] + [what you built/did] + [impact/result]. If no metric exists, imply scope or scale. Keep under 140 chars.
+- summary: write it fresh if missing or weak. Make it genuinely compelling.
+- Sort experience newest first.
+
+═══════════════════════════════════════════
+IF BUSINESS — return exactly this shape:
+═══════════════════════════════════════════
+{
+  "doc_type": "business",
+  "company_name": "Company Name",
+  "tagline": "A punchy one-line value proposition. Max 10 words.",
+  "industry": "e.g. SaaS, Healthcare, Retail, Consulting",
+  "about": "Write 3–4 compelling sentences about this company. What they do, who they serve, what makes them different, their mission.",
+  "services": [
+    {
+      "name": "Service or Product Name",
+      "description": "2 sentence description of what it is and the value it delivers.",
+      "icon": "single relevant emoji"
+    }
+  ],
+  "highlights": [
+    { "stat": "10K+", "label": "Customers Served" },
+    { "stat": "5 years", "label": "In Business" }
+  ],
+  "contact": {
+    "email": "or empty string",
+    "phone": "or empty string",
+    "website": "full URL or empty string",
+    "location": "City, Country or empty string",
+    "linkedin": "full URL or empty string",
+    "twitter": "full URL or empty string"
+  },
+  "team": [
+    { "name": "Person Name", "role": "Title" }
+  ]
+}
+
+BUSINESS enhancement rules:
+- tagline: punchy, benefit-led. Never generic ("Your trusted partner").
+- about: write it — don't copy verbatim, make it flow.
+- services: if the doc lists features, group them into logical service offerings. Write descriptions, don't just list names.
+- highlights: extract any numbers/stats. If none exist, omit the array (empty []).
+- team: only include if names+roles are clearly stated.
+
+Return ONLY the JSON object. No markdown fences. No commentary."""
 
 
 async def parse_resume(text: str) -> dict:
-    """Use Grok to extract structured resume data from raw text."""
-    logger.info(f"Parsing resume ({len(text)} chars) via Groq/Llama")
+    """
+    Parse and enhance a document (resume or business doc) using Groq.
+    Returns structured JSON with doc_type field.
+    """
+    logger.info(f"Parsing document ({len(text)} chars) via Groq/Llama")
 
     response = await client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         max_tokens=4096,
+        temperature=0.3,       # low temperature for structured extraction; slight warmth for copy
         messages=[
-            {"role": "system", "content": PARSE_SYSTEM_PROMPT},
-            {"role": "user", "content": f"Parse this resume:\n\n{text}"},
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": f"Parse and enhance this document:\n\n{text}"},
         ],
     )
 
     raw = response.choices[0].message.content.strip()
 
-    # Strip markdown code fences if Grok wrapped the JSON
+    # Strip any accidental markdown fences
     if raw.startswith("```"):
         lines = raw.split("\n")
         raw = "\n".join(lines[1:-1]) if lines[-1].strip() == "```" else "\n".join(lines[1:])
@@ -83,10 +151,21 @@ async def parse_resume(text: str) -> dict:
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as e:
-        logger.error(f"Failed to parse Claude response as JSON: {e}\nRaw: {raw[:500]}")
-        raise ValueError("Failed to parse resume structure from AI response. Please try again.")
+        logger.error(f"JSON parse error: {e} | Raw: {raw[:400]}")
+        raise ValueError("Failed to parse AI response. Please try again.")
 
-    # Ensure required fields exist with defaults
+    doc_type = data.get("doc_type", "resume")
+
+    if doc_type == "resume":
+        _apply_resume_defaults(data)
+    else:
+        _apply_business_defaults(data)
+
+    logger.info(f"Parsed '{doc_type}' document: {data.get('name') or data.get('company_name', '?')}")
+    return data
+
+
+def _apply_resume_defaults(data: dict) -> None:
     defaults = {
         "name": "Your Name",
         "title": "",
@@ -97,14 +176,35 @@ async def parse_resume(text: str) -> dict:
         "linkedin": "",
         "github": "",
         "website": "",
-        "skills": [],
+        "skills": {},
         "experience": [],
         "education": [],
         "certifications": [],
     }
-    for key, default in defaults.items():
-        if key not in data:
-            data[key] = default
+    for k, v in defaults.items():
+        data.setdefault(k, v)
 
-    logger.info(f"Parsed resume for: {data.get('name', 'Unknown')}")
-    return data
+    # Normalise skills: if it came back as a flat list, wrap it
+    if isinstance(data["skills"], list):
+        data["skills"] = {"Skills": data["skills"]}
+
+
+def _apply_business_defaults(data: dict) -> None:
+    defaults = {
+        "company_name": "Company Name",
+        "tagline": "",
+        "industry": "",
+        "about": "",
+        "services": [],
+        "highlights": [],
+        "contact": {},
+        "team": [],
+    }
+    for k, v in defaults.items():
+        data.setdefault(k, v)
+    data["contact"].setdefault("email", "")
+    data["contact"].setdefault("phone", "")
+    data["contact"].setdefault("website", "")
+    data["contact"].setdefault("location", "")
+    data["contact"].setdefault("linkedin", "")
+    data["contact"].setdefault("twitter", "")

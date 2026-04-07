@@ -1,314 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ name }} — Resume</title>
-  <meta name="description" content="{{ summary[:160] if summary else name + ' — Professional Resume' }}" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ name }}</title>
+  <meta name="description" content="{{ summary[:160] if summary else name }}"/>
   <style>
-    /* ── Reset & base ── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #0d1117;
-      --surface: #161b22;
-      --surface-2: #1c2128;
-      --border: #30363d;
-      --text: #e6edf3;
-      --muted: #8b949e;
-      --accent: #58a6ff;
-      --accent-2: #3fb950;
-      --accent-dim: rgba(88, 166, 255, 0.12);
-      --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
-      --body-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;--border:#30363d;
+      --text:#e6edf3;--muted:#8b949e;--blue:#58a6ff;--blue-dim:rgba(88,166,255,.1);
+      --green:#3fb950;--amber:#d29922;
+      --mono:'SFMono-Regular','Consolas','Liberation Mono',Menlo,monospace;
+      --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
     }
-    html { scroll-behavior: smooth; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--body-font);
-      font-size: 15px;
-      line-height: 1.7;
-    }
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
 
-    /* ── Layout ── */
-    .wrapper { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; }
+    /* ── HEADER ── */
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:2.5rem 0 2rem;position:relative;overflow:hidden}
+    header::before{content:'';position:absolute;top:-80px;right:-80px;width:320px;height:320px;background:radial-gradient(circle,rgba(88,166,255,.07) 0%,transparent 70%);pointer-events:none}
+    .header-inner{max-width:960px;margin:0 auto;padding:0 2rem;display:flex;align-items:flex-start;gap:2rem;position:relative}
+    .avatar{width:72px;height:72px;border-radius:10px;background:var(--blue-dim);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--blue);flex-shrink:0;border:1px solid #30363d}
+    .header-text h1{font-size:2.1rem;font-weight:700;letter-spacing:-0.5px;line-height:1.15;color:var(--text)}
+    .header-text .role{font-family:var(--mono);font-size:.85rem;color:var(--green);margin:.4rem 0 1rem}
+    .header-text .role::before{content:'// ';opacity:.5}
+    .contact-bar{display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;list-style:none}
+    .contact-bar li{font-family:var(--mono);font-size:.76rem;color:var(--muted)}
+    .contact-bar a{color:var(--blue);text-decoration:none}
+    .contact-bar a:hover{text-decoration:underline}
 
-    /* ── Header ── */
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 3.5rem 0 3rem;
-      position: relative;
-      overflow: hidden;
-    }
-    header::before {
-      content: "";
-      position: absolute;
-      top: -60px; right: -60px;
-      width: 300px; height: 300px;
-      background: radial-gradient(circle, rgba(88,166,255,0.08) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    header .wrapper { display: flex; align-items: flex-start; gap: 2rem; position: relative; }
-    .avatar {
-      width: 82px; height: 82px; border-radius: 12px;
-      background: var(--accent-dim);
-      display: flex; align-items: center; justify-content: center;
-      font-family: var(--mono); font-size: 2rem; color: var(--accent);
-      flex-shrink: 0; border: 1px solid var(--border);
-    }
-    .header-text h1 {
-      font-size: 2.4rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      color: var(--text);
-      line-height: 1.15;
-    }
-    .header-text .title {
-      font-family: var(--mono);
-      font-size: 0.875rem;
-      color: var(--accent-2);
-      margin: 0.4rem 0 1rem;
-    }
-    .contact-links {
-      display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem;
-      list-style: none;
-    }
-    .contact-links li { display: flex; align-items: center; gap: 0.35rem; }
-    .contact-links a, .contact-links span {
-      color: var(--muted); font-size: 0.835rem; text-decoration: none;
-      font-family: var(--mono);
-    }
-    .contact-links a:hover { color: var(--accent); }
+    /* ── LAYOUT ── */
+    .page{max-width:960px;margin:0 auto;padding:2rem 2rem 4rem;display:grid;grid-template-columns:1fr 240px;gap:2.5rem;align-items:start}
 
-    /* ── Main content ── */
-    main { padding: 2.5rem 0 4rem; }
-    .two-col { display: grid; grid-template-columns: 1fr 270px; gap: 2.5rem; }
+    /* ── SECTION COMMON ── */
+    section{margin-bottom:2.25rem}
+    .sec-title{font-family:var(--mono);font-size:.63rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+    .sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
 
-    /* ── Sections ── */
-    section { margin-bottom: 2.5rem; }
-    .section-label {
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 1.2rem;
-      display: flex; align-items: center; gap: 0.5rem;
-    }
-    .section-label::after {
-      content: ""; flex: 1; height: 1px; background: var(--border);
-    }
+    /* ── SUMMARY ── */
+    .summary{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:1rem 1.2rem;font-size:.9rem;color:#c9d1d9;line-height:1.8;margin-bottom:2rem}
 
-    /* Summary */
-    .summary p { color: var(--muted); font-size: 0.95rem; }
+    /* ── EXPERIENCE ── */
+    .exp-list{display:flex;flex-direction:column;gap:1rem}
+    .exp-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.25rem;transition:border-color .15s}
+    .exp-item:hover{border-color:rgba(88,166,255,.35)}
+    .exp-header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:.25rem}
+    .exp-role{font-weight:700;font-size:.975rem;color:var(--text)}
+    .exp-dates{font-size:.71rem;color:var(--muted);font-family:var(--mono);background:var(--surface2);padding:.18rem .5rem;border-radius:4px;border:1px solid var(--border);white-space:nowrap}
+    .exp-company{font-size:.83rem;color:var(--blue);font-family:var(--mono);margin:.35rem 0 .7rem}
+    .exp-company::before{content:'→ ';color:var(--muted)}
+    .exp-bullets{list-style:none}
+    .exp-bullets li{position:relative;padding-left:1.1rem;margin-bottom:.3rem;font-size:.855rem;color:#c9d1d9}
+    .exp-bullets li::before{content:'▸';position:absolute;left:0;color:var(--green);font-size:.7rem;top:.18rem}
 
-    /* Experience */
-    .job {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.25rem 1.4rem;
-      position: relative;
-    }
-    .job + .job { margin-top: 0.85rem; }
-    .job-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.25rem; }
-    .job-header h3 { font-size: 1rem; font-weight: 600; color: var(--text); }
-    .job-meta { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
-    .job-company {
-      font-size: 0.875rem; color: var(--accent); font-weight: 500;
-      margin-top: 0.15rem; display: flex; align-items: center; gap: 0.4rem;
-    }
-    .job-company::before { content: "→"; color: var(--muted); font-family: var(--mono); font-size: 0.75rem; }
-    .job-bullets { list-style: none; margin-top: 0.8rem; }
-    .job-bullets li {
-      position: relative; padding-left: 1.2rem; margin-bottom: 0.35rem;
-      font-size: 0.875rem; color: #c9d1d9;
-    }
-    .job-bullets li::before {
-      content: "▸"; position: absolute; left: 0;
-      color: var(--accent-2); font-size: 0.75rem; top: 0.15em;
-    }
+    /* ── SIDEBAR ── */
+    .sidebar{}
 
-    /* Skills */
-    .skills-cloud { display: flex; flex-wrap: wrap; gap: 0.45rem; }
-    .skill-tag {
-      background: var(--surface);
-      color: var(--accent);
-      font-family: var(--mono);
-      font-size: 0.775rem;
-      font-weight: 500;
-      padding: 0.28rem 0.65rem;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-    }
-    .skill-tag:hover { border-color: var(--accent); background: var(--accent-dim); }
+    /* ── SKILLS ── */
+    .skill-group{margin-bottom:1.1rem}
+    .skill-group-label{font-family:var(--mono);font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--amber);margin-bottom:.4rem}
+    .skill-tags{display:flex;flex-wrap:wrap;gap:.3rem}
+    .skill-tag{background:var(--blue-dim);color:var(--blue);font-size:.71rem;font-family:var(--mono);padding:.18rem .5rem;border-radius:4px;border:1px solid rgba(88,166,255,.25)}
 
-    /* Education */
-    .edu {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem 1.25rem;
-    }
-    .edu + .edu { margin-top: 0.7rem; }
-    .edu h3 { font-size: 0.925rem; font-weight: 600; color: var(--text); }
-    .edu .degree { font-size: 0.85rem; color: var(--accent-2); margin-top: 0.15rem; }
-    .edu .edu-meta { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); margin-top: 0.25rem; }
+    /* ── EDUCATION ── */
+    .edu-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.85rem 1rem;margin-bottom:.75rem}
+    .edu-school{font-weight:700;font-size:.875rem;color:var(--text)}
+    .edu-degree{font-size:.8rem;color:var(--green);font-family:var(--mono);margin:.2rem 0}
+    .edu-meta{font-size:.75rem;color:var(--muted);font-family:var(--mono)}
 
-    /* Certifications */
-    .cert-list { list-style: none; }
-    .cert-list li {
-      font-family: var(--mono);
-      font-size: 0.82rem;
-      color: var(--muted);
-      padding: 0.45rem 0;
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 0.5rem;
-    }
-    .cert-list li::before { content: "✓"; color: var(--accent-2); }
-    .cert-list li:last-child { border-bottom: none; }
+    /* ── CERTS ── */
+    .cert-list{list-style:none}
+    .cert-list li{font-family:var(--mono);font-size:.79rem;color:var(--muted);padding:.3rem 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:.4rem}
+    .cert-list li::before{content:'✓';color:var(--green);flex-shrink:0}
+    .cert-list li:last-child{border-bottom:none}
 
-    /* ── Terminal cursor blink (decorative) ── */
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-    .cursor {
-      display: inline-block; width: 2px; height: 1em;
-      background: var(--accent); margin-left: 2px;
-      animation: blink 1.1s step-end infinite;
-      vertical-align: text-bottom;
-    }
+    /* ── FOOTER ── */
+    footer{text-align:center;padding:1.25rem;background:var(--surface);border-top:1px solid var(--border);font-size:.72rem;color:var(--muted);font-family:var(--mono)}
+    footer a{color:var(--blue);text-decoration:none}
 
-    /* ── Footer ── */
-    footer {
-      text-align: center;
-      padding: 1.5rem;
-      border-top: 1px solid var(--border);
-      font-family: var(--mono);
-      font-size: 0.775rem;
-      color: var(--muted);
-    }
-    footer a { color: var(--accent); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
-
-    /* ── Responsive ── */
-    @media (max-width: 680px) {
-      .two-col { grid-template-columns: 1fr; }
-      header .wrapper { flex-direction: column; gap: 1rem; }
-      .header-text h1 { font-size: 1.85rem; }
+    /* ── RESPONSIVE ── */
+    @media(max-width:680px){
+      .page{grid-template-columns:1fr}
+      .header-inner{flex-direction:column;gap:1rem}
     }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="wrapper">
-    <div class="avatar">{{ name[0] if name else "?" }}</div>
+  <div class="header-inner">
+    <div class="avatar">{{ (name or '?')[:2].upper() }}</div>
     <div class="header-text">
-      <h1>{{ name }}<span class="cursor"></span></h1>
-      {% if title %}<p class="title">// {{ title }}</p>{% endif %}
-      <ul class="contact-links">
+      <h1>{{ name }}</h1>
+      {% if title %}<p class="role">{{ title }}</p>{% endif %}
+      <ul class="contact-bar">
         {% if email %}<li><a href="mailto:{{ email }}">{{ email }}</a></li>{% endif %}
-        {% if phone %}<li><span>{{ phone }}</span></li>{% endif %}
-        {% if location %}<li><span>{{ location }}</span></li>{% endif %}
-        {% if linkedin %}<li><a href="{{ linkedin }}" target="_blank" rel="noopener">linkedin</a></li>{% endif %}
-        {% if github %}<li><a href="{{ github }}" target="_blank" rel="noopener">github</a></li>{% endif %}
-        {% if website %}<li><a href="{{ website }}" target="_blank" rel="noopener">portfolio</a></li>{% endif %}
+        {% if phone %}<li>{{ phone }}</li>{% endif %}
+        {% if location %}<li>{{ location }}</li>{% endif %}
+        {% if linkedin %}<li><a href="{{ linkedin }}" target="_blank" rel="noopener">linkedin ↗</a></li>{% endif %}
+        {% if github %}<li><a href="{{ github }}" target="_blank" rel="noopener">github ↗</a></li>{% endif %}
+        {% if website %}<li><a href="{{ website }}" target="_blank" rel="noopener">portfolio ↗</a></li>{% endif %}
       </ul>
     </div>
   </div>
 </header>
 
-<main>
-  <div class="wrapper">
-    <div class="two-col">
+<div class="page">
 
-      <!-- Left column -->
-      <div class="left-col">
+  <!-- ── MAIN COLUMN ── -->
+  <main>
 
-        {% if summary %}
-        <section class="summary">
-          <h2 class="section-label">about</h2>
-          <p>{{ summary }}</p>
-        </section>
-        {% endif %}
+    {% if summary %}
+    <blockquote class="summary">{{ summary }}</blockquote>
+    {% endif %}
 
-        {% if experience %}
-        <section>
-          <h2 class="section-label">experience</h2>
-          {% for job in experience %}
-          <div class="job">
-            <div class="job-header">
-              <h3>{{ job.role }}</h3>
-              <span class="job-meta">{{ job.start }} – {{ job.end }}</span>
-            </div>
-            <div class="job-company">
-              {{ job.company }}{% if job.location %} · {{ job.location }}{% endif %}
-            </div>
-            {% if job.bullets %}
-            <ul class="job-bullets">
-              {% for bullet in job.bullets %}
-              <li>{{ bullet }}</li>
-              {% endfor %}
-            </ul>
-            {% endif %}
+    {% if experience %}
+    <section>
+      <h2 class="sec-title">Experience</h2>
+      <div class="exp-list">
+        {% for job in experience %}
+        <div class="exp-item">
+          <div class="exp-header">
+            <span class="exp-role">{{ job.role }}</span>
+            <span class="exp-dates">{{ job.start }} – {{ job.end }}</span>
           </div>
-          {% endfor %}
-        </section>
-        {% endif %}
-
-      </div><!-- /left-col -->
-
-      <!-- Right column -->
-      <div class="right-col">
-
-        {% if skills %}
-        <section>
-          <h2 class="section-label">skills</h2>
-          <div class="skills-cloud">
-            {% for skill in skills %}
-            <span class="skill-tag">{{ skill }}</span>
-            {% endfor %}
-          </div>
-        </section>
-        {% endif %}
-
-        {% if education %}
-        <section>
-          <h2 class="section-label">education</h2>
-          {% for ed in education %}
-          <div class="edu">
-            <h3>{{ ed.institution }}</h3>
-            <p class="degree">{{ ed.degree }}</p>
-            <p class="edu-meta">
-              {{ ed.start }}{% if ed.end %} → {{ ed.end }}{% endif %}
-              {% if ed.gpa %} · GPA {{ ed.gpa }}{% endif %}
-            </p>
-            {% if ed.notes %}<p class="edu-meta">{{ ed.notes }}</p>{% endif %}
-          </div>
-          {% endfor %}
-        </section>
-        {% endif %}
-
-        {% if certifications %}
-        <section>
-          <h2 class="section-label">certs</h2>
-          <ul class="cert-list">
-            {% for cert in certifications %}
-            <li>{{ cert }}</li>
-            {% endfor %}
+          <div class="exp-company">{{ job.company }}{% if job.location %} · {{ job.location }}{% endif %}</div>
+          {% if job.bullets %}
+          <ul class="exp-bullets">
+            {% for b in job.bullets %}<li>{{ b }}</li>{% endfor %}
           </ul>
-        </section>
-        {% endif %}
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
 
-      </div><!-- /right-col -->
+  </main>
 
-    </div>
-  </div>
-</main>
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+
+    {% if skills %}
+    <section>
+      <h2 class="sec-title">Skills</h2>
+      {% if skills is mapping %}
+        {% for category, skill_list in skills.items() %}
+        <div class="skill-group">
+          <div class="skill-group-label">{{ category }}</div>
+          <div class="skill-tags">
+            {% for s in skill_list %}<span class="skill-tag">{{ s }}</span>{% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="skill-tags">
+          {% for s in skills %}<span class="skill-tag">{{ s }}</span>{% endfor %}
+        </div>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    {% if education %}
+    <section>
+      <h2 class="sec-title">Education</h2>
+      {% for ed in education %}
+      <div class="edu-item">
+        <div class="edu-school">{{ ed.institution }}</div>
+        <div class="edu-degree">{{ ed.degree }}</div>
+        <div class="edu-meta">{{ ed.start }}{% if ed.end %} → {{ ed.end }}{% endif %}{% if ed.gpa %} · GPA {{ ed.gpa }}{% endif %}</div>
+        {% if ed.notes %}<div class="edu-meta">{{ ed.notes }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if certifications %}
+    <section>
+      <h2 class="sec-title">Certifications</h2>
+      <ul class="cert-list">
+        {% for c in certifications %}<li>{{ c }}</li>{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+  </aside>
+
+</div>
 
 <footer>
-  built with <a href="https://pagedin.app" target="_blank" rel="noopener">pagedin</a> — paste your resume, get a live website.
+  Built with <a href="https://plasmacat420.github.io/pagedIn/" target="_blank" rel="noopener">PagedIn</a>
 </footer>
 
 </body>

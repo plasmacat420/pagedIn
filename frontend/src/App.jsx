@@ -12,7 +12,7 @@ import { generateSite } from './api/client'
 /**
  * App state machine:
  *  'landing'    → Hero + ResumeInput
- *  'generating' → Full-page loading (building site)
+ *  'generating' → Full-page loading (AI parsing + both themes generated in parallel)
  *  'preview'    → ThemeSelector + PreviewPanel + optional DeployOptions
  *  'deploying'  → Full-page loading (GitHub Pages deploy in progress)
  *  'success'    → SuccessScreen
@@ -20,11 +20,11 @@ import { generateSite } from './api/client'
 export default function App() {
   const [appState, setAppState] = useState('landing')
   const [parsedData, setParsedData] = useState(null)
-  const [generatedHtml, setGeneratedHtml] = useState(null)
-  const [deployToken, setDeployToken] = useState(null)
+
+  // sites holds both generated themes: { minimal_light: {html, token}, modern_dark: {html, token} }
+  const [sites, setSites] = useState({})
   const [theme, setTheme] = useState('minimal_light')
-  const [rebuildUsed, setRebuildUsed] = useState(false)
-  const [rebuilding, setRebuilding] = useState(false)
+
   const [showDeployOptions, setShowDeployOptions] = useState(false)
   const [liveUrl, setLiveUrl] = useState(null)
   const [error, setError] = useState(null)
@@ -45,52 +45,35 @@ export default function App() {
     inputSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  // Called after ResumeInput successfully parses the resume
+  // Called after ResumeInput successfully parses the resume.
+  // Generates both themes in parallel — theme switching is then instant.
   const handleParsed = async (data) => {
     setParsedData(data)
     setError(null)
+
     try {
-      const result = await generateSite(data, theme)
-      setGeneratedHtml(result.html)
-      setDeployToken(result.deploy_token)
+      const [light, dark] = await Promise.all([
+        generateSite(data, 'minimal_light'),
+        generateSite(data, 'modern_dark'),
+      ])
+
+      setSites({
+        minimal_light: { html: light.html, token: light.deploy_token },
+        modern_dark:   { html: dark.html,  token: dark.deploy_token  },
+      })
+      setTheme('minimal_light')
       setAppState('preview')
       setShowDeployOptions(false)
-      setRebuildUsed(false)
     } catch (err) {
       setError(err.message || 'Site generation failed. Please try again.')
       setAppState('landing')
     }
   }
 
-  const handleRebuild = async () => {
-    if (rebuildUsed || !parsedData) return
-    setRebuilding(true)
-    setError(null)
-    try {
-      const result = await generateSite(parsedData, theme)
-      setGeneratedHtml(result.html)
-      setDeployToken(result.deploy_token)
-      setRebuildUsed(true)
-    } catch (err) {
-      setError(err.message || 'Rebuild failed. Please try again.')
-    } finally {
-      setRebuilding(false)
-    }
-  }
-
-  const handleThemeChange = async (newTheme) => {
+  // Instant — no API call needed, both themes are pre-generated
+  const handleThemeChange = (newTheme) => {
     setTheme(newTheme)
-    if (!parsedData || appState !== 'preview') return
-    setRebuilding(true)
-    try {
-      const result = await generateSite(parsedData, newTheme)
-      setGeneratedHtml(result.html)
-      setDeployToken(result.deploy_token)
-    } catch (err) {
-      setError(err.message || 'Theme switch failed.')
-    } finally {
-      setRebuilding(false)
-    }
+    setShowDeployOptions(false)
   }
 
   const handleDeploy = () => {
@@ -101,7 +84,6 @@ export default function App() {
     }, 100)
   }
 
-  // Called by DeployOptions the moment a deploy kicks off
   const handleDeployStart = () => {
     setAppState('deploying')
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -113,7 +95,6 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // If deploy fails, come back to preview with error showing
   const handleDeployError = (msg) => {
     setError(msg)
     setAppState('preview')
@@ -123,14 +104,14 @@ export default function App() {
   const handleStartOver = () => {
     setAppState('landing')
     setParsedData(null)
-    setGeneratedHtml(null)
-    setDeployToken(null)
-    setRebuildUsed(false)
+    setSites({})
     setShowDeployOptions(false)
     setLiveUrl(null)
     setError(null)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+
+  const activeSite = sites[theme] || {}
 
   return (
     <div className="min-h-screen">
@@ -184,25 +165,22 @@ export default function App() {
       )}
 
       {/* ── PREVIEW ─────────────────────────────────────────────── */}
-      {appState === 'preview' && generatedHtml && (
+      {appState === 'preview' && activeSite.html && (
         <div className="pt-20">
           <ThemeSelector theme={theme} onChange={handleThemeChange} />
 
           <PreviewPanel
-            html={generatedHtml}
-            rebuildUsed={rebuildUsed}
-            onRebuild={handleRebuild}
-            rebuilding={rebuilding}
+            html={activeSite.html}
             onDeploy={handleDeploy}
           />
 
           {showDeployOptions && (
             <div id="deploy-options" className="animate-slide-up">
               <DeployOptions
-                html={generatedHtml}
-                deployToken={deployToken}
-                parsedName={parsedData?.name || 'resume'}
-                firstName={parsedData?.name?.split(' ')[0] || 'my'}
+                html={activeSite.html}
+                deployToken={activeSite.token}
+                parsedName={parsedData?.name || parsedData?.company_name || 'site'}
+                firstName={parsedData?.name?.split(' ')[0] || parsedData?.company_name || 'my'}
                 onDeployStart={handleDeployStart}
                 onDeployed={handleDeployed}
                 onError={handleDeployError}

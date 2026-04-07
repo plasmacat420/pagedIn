@@ -20,11 +20,11 @@ PAGES_POLL_TIMEOUT = 50   # max seconds to wait for Pages to go live
 
 
 def _slugify(name: str) -> str:
-    """Convert a name to a URL-safe slug: 'John Doe' → 'john-doe'"""
+    """Convert a name to a URL-safe slug: 'John Doe' → 'PagedIn-john-doe'"""
     slug = re.sub(r"[^\w\s-]", "", name.lower())
     slug = re.sub(r"[\s_]+", "-", slug)
     slug = re.sub(r"-+", "-", slug).strip("-")
-    return slug[:40]  # cap length
+    return f"PagedIn-{slug[:35]}"
 
 
 def _random_suffix(length: int = 4) -> str:

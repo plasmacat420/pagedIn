@@ -1,265 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ name }} — Resume</title>
-  <meta name="description" content="{{ summary[:160] if summary else name + ' — Professional Resume' }}" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ name }}</title>
+  <meta name="description" content="{{ summary[:160] if summary else name }}"/>
   <style>
-    /* ── Reset & base ── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #fafaf8;
-      --surface: #ffffff;
-      --border: #e8e8e4;
-      --text: #1a1a1a;
-      --muted: #6b7280;
-      --accent: #2563eb;
-      --accent-light: #eff6ff;
-      --heading-font: Georgia, 'Times New Roman', serif;
-      --body-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --navy:#1e293b;--navy-mid:#334155;--blue:#3b82f6;--blue-light:#eff6ff;
+      --text:#111827;--muted:#6b7280;--border:#e5e7eb;--bg:#f9fafb;--white:#ffffff;
+      --serif:'Georgia','Times New Roman',serif;
+      --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
     }
-    html { scroll-behavior: smooth; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--body-font);
-      font-size: 15px;
-      line-height: 1.7;
-    }
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
 
-    /* ── Layout ── */
-    .wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem; }
+    /* ── HEADER ── */
+    header{background:var(--navy);color:#fff;padding:2.75rem 0 2.25rem}
+    .header-inner{max-width:900px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;gap:2rem}
+    .avatar{width:72px;height:72px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:1.75rem;color:#fff;flex-shrink:0;letter-spacing:-1px;border:3px solid rgba(255,255,255,0.15)}
+    .header-text h1{font-family:var(--serif);font-size:2.25rem;font-weight:700;letter-spacing:-0.5px;line-height:1.1}
+    .header-text .role{font-size:1rem;color:#93c5fd;font-weight:500;margin:.35rem 0 1rem}
+    .contact-bar{display:flex;flex-wrap:wrap;gap:.4rem 1.25rem;list-style:none}
+    .contact-bar li{display:flex;align-items:center;gap:.3rem;font-size:.8rem;color:rgba(255,255,255,.7)}
+    .contact-bar a{color:#93c5fd;text-decoration:none}
+    .contact-bar a:hover{color:#fff}
 
-    /* ── Header / Hero ── */
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 3.5rem 0 3rem;
-    }
-    header .wrapper { display: flex; align-items: flex-start; gap: 2rem; }
-    .avatar {
-      width: 80px; height: 80px; border-radius: 50%;
-      background: var(--accent-light);
-      display: flex; align-items: center; justify-content: center;
-      font-family: var(--heading-font); font-size: 2rem; color: var(--accent);
-      flex-shrink: 0; border: 2px solid var(--border);
-    }
-    .header-text h1 {
-      font-family: var(--heading-font);
-      font-size: 2.4rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      color: var(--text);
-      line-height: 1.2;
-    }
-    .header-text .title {
-      font-size: 1.05rem;
-      color: var(--accent);
-      font-weight: 500;
-      margin: 0.4rem 0 1rem;
-    }
-    .contact-links {
-      display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem;
-      list-style: none;
-    }
-    .contact-links li { display: flex; align-items: center; gap: 0.35rem; }
-    .contact-links a, .contact-links span {
-      color: var(--muted); font-size: 0.875rem; text-decoration: none;
-    }
-    .contact-links a:hover { color: var(--accent); }
-    .contact-links .icon { font-size: 0.8rem; }
+    /* ── LAYOUT ── */
+    .page{max-width:900px;margin:0 auto;padding:0 2rem 4rem;display:grid;grid-template-columns:1fr 260px;gap:2.5rem;align-items:start}
 
-    /* ── Main content ── */
-    main { padding: 2.5rem 0 4rem; }
-    .two-col { display: grid; grid-template-columns: 1fr 280px; gap: 3rem; }
+    /* ── SECTION COMMON ── */
+    section{margin-bottom:2rem}
+    .sec-title{font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);border-bottom:2px solid var(--blue);padding-bottom:.35rem;margin-bottom:1.1rem}
 
-    /* ── Sections ── */
-    section { margin-bottom: 2.5rem; }
-    .section-label {
-      font-family: var(--heading-font);
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 0.5rem;
-      margin-bottom: 1.2rem;
-    }
+    /* ── SUMMARY ── */
+    .summary{background:var(--white);border:1px solid var(--border);border-left:4px solid var(--blue);border-radius:0 8px 8px 0;padding:1.1rem 1.25rem;font-size:.935rem;color:var(--navy-mid);line-height:1.75;margin-top:1.75rem}
 
-    /* Summary */
-    .summary p { color: var(--text); font-size: 0.975rem; }
+    /* ── EXPERIENCE ── */
+    .exp-list{display:flex;flex-direction:column;gap:1.6rem;margin-top:1.75rem}
+    .exp-item{position:relative;padding-left:1.25rem;border-left:2px solid var(--border)}
+    .exp-item::before{content:'';position:absolute;left:-5px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--blue);border:2px solid var(--white)}
+    .exp-header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:.25rem}
+    .exp-role{font-weight:700;font-size:1rem;color:var(--navy)}
+    .exp-dates{font-size:.775rem;color:var(--muted);white-space:nowrap}
+    .exp-company{font-size:.875rem;color:var(--blue);font-weight:600;margin:.15rem 0 .6rem}
+    .exp-bullets{list-style:none}
+    .exp-bullets li{position:relative;padding-left:1rem;margin-bottom:.3rem;font-size:.875rem;color:#374151}
+    .exp-bullets li::before{content:'›';position:absolute;left:0;color:var(--blue);font-weight:700}
 
-    /* Experience */
-    .job + .job { margin-top: 1.8rem; padding-top: 1.8rem; border-top: 1px solid var(--border); }
-    .job-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.25rem; }
-    .job-header h3 { font-size: 1rem; font-weight: 600; color: var(--text); }
-    .job-meta { font-size: 0.825rem; color: var(--muted); }
-    .job-company { font-size: 0.9rem; color: var(--accent); font-weight: 500; margin-top: 0.1rem; }
-    .job-bullets { list-style: none; margin-top: 0.65rem; }
-    .job-bullets li {
-      position: relative; padding-left: 1.1rem; margin-bottom: 0.35rem;
-      font-size: 0.9rem; color: #374151;
-    }
-    .job-bullets li::before {
-      content: "–"; position: absolute; left: 0; color: var(--accent);
-    }
+    /* ── SIDEBAR ── */
+    .sidebar{padding-top:1.75rem}
 
-    /* Skills */
-    .skills-cloud { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-    .skill-tag {
-      background: var(--accent-light);
-      color: var(--accent);
-      font-size: 0.8rem;
-      font-weight: 500;
-      padding: 0.3rem 0.75rem;
-      border-radius: 999px;
-      border: 1px solid #bfdbfe;
-    }
+    /* ── SKILLS ── */
+    .skill-group{margin-bottom:1.1rem}
+    .skill-group-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.4rem}
+    .skill-tags{display:flex;flex-wrap:wrap;gap:.35rem}
+    .skill-tag{background:var(--blue-light);color:#1d4ed8;font-size:.75rem;font-weight:500;padding:.2rem .6rem;border-radius:999px;border:1px solid #bfdbfe}
 
-    /* Education */
-    .edu + .edu { margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid var(--border); }
-    .edu h3 { font-size: 0.95rem; font-weight: 600; }
-    .edu .degree { font-size: 0.875rem; color: var(--accent); margin-top: 0.1rem; }
-    .edu .edu-meta { font-size: 0.825rem; color: var(--muted); margin-top: 0.1rem; }
+    /* ── EDUCATION ── */
+    .edu-item{margin-bottom:1rem;padding:1rem;background:var(--white);border:1px solid var(--border);border-radius:8px}
+    .edu-school{font-weight:700;font-size:.9rem;color:var(--navy)}
+    .edu-degree{font-size:.825rem;color:var(--blue);margin:.1rem 0}
+    .edu-meta{font-size:.775rem;color:var(--muted)}
 
-    /* Certifications */
-    .cert-list { list-style: none; }
-    .cert-list li {
-      font-size: 0.875rem; padding: 0.3rem 0;
-      border-bottom: 1px solid var(--border);
-      color: var(--text);
-    }
-    .cert-list li:last-child { border-bottom: none; }
+    /* ── CERTS ── */
+    .cert-list{list-style:none}
+    .cert-list li{font-size:.825rem;color:var(--muted);padding:.3rem 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.4rem}
+    .cert-list li::before{content:'✓';color:var(--blue);font-weight:700}
+    .cert-list li:last-child{border-bottom:none}
 
-    /* ── Footer ── */
-    footer {
-      text-align: center;
-      padding: 1.5rem;
-      border-top: 1px solid var(--border);
-      font-size: 0.78rem;
-      color: var(--muted);
-    }
-    footer a { color: var(--accent); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
+    /* ── FOOTER ── */
+    footer{text-align:center;padding:1.25rem;background:var(--white);border-top:1px solid var(--border);font-size:.75rem;color:var(--muted)}
+    footer a{color:var(--blue);text-decoration:none}
 
-    /* ── Responsive ── */
-    @media (max-width: 680px) {
-      .two-col { grid-template-columns: 1fr; }
-      header .wrapper { flex-direction: column; gap: 1rem; }
-      .header-text h1 { font-size: 1.8rem; }
+    /* ── RESPONSIVE ── */
+    @media(max-width:680px){
+      .page{grid-template-columns:1fr}
+      .header-inner{flex-direction:column;align-items:flex-start;gap:1rem}
+      .sidebar{padding-top:0}
     }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="wrapper">
-    <div class="avatar">{{ name[0] if name else "?" }}</div>
+  <div class="header-inner">
+    <div class="avatar">{{ (name or '?')[:2].upper() }}</div>
     <div class="header-text">
       <h1>{{ name }}</h1>
-      {% if title %}<p class="title">{{ title }}</p>{% endif %}
-      <ul class="contact-links">
-        {% if email %}<li><span class="icon">✉</span><a href="mailto:{{ email }}">{{ email }}</a></li>{% endif %}
-        {% if phone %}<li><span class="icon">☏</span><span>{{ phone }}</span></li>{% endif %}
-        {% if location %}<li><span class="icon">◎</span><span>{{ location }}</span></li>{% endif %}
-        {% if linkedin %}<li><span class="icon">in</span><a href="{{ linkedin }}" target="_blank" rel="noopener">LinkedIn</a></li>{% endif %}
-        {% if github %}<li><span class="icon">⌥</span><a href="{{ github }}" target="_blank" rel="noopener">GitHub</a></li>{% endif %}
-        {% if website %}<li><span class="icon">⊕</span><a href="{{ website }}" target="_blank" rel="noopener">Website</a></li>{% endif %}
+      {% if title %}<p class="role">{{ title }}</p>{% endif %}
+      <ul class="contact-bar">
+        {% if email %}<li>✉ <a href="mailto:{{ email }}">{{ email }}</a></li>{% endif %}
+        {% if phone %}<li>☏ {{ phone }}</li>{% endif %}
+        {% if location %}<li>◎ {{ location }}</li>{% endif %}
+        {% if linkedin %}<li><a href="{{ linkedin }}" target="_blank" rel="noopener">LinkedIn ↗</a></li>{% endif %}
+        {% if github %}<li><a href="{{ github }}" target="_blank" rel="noopener">GitHub ↗</a></li>{% endif %}
+        {% if website %}<li><a href="{{ website }}" target="_blank" rel="noopener">Portfolio ↗</a></li>{% endif %}
       </ul>
     </div>
   </div>
 </header>
 
-<main>
-  <div class="wrapper">
-    <div class="two-col">
+<div class="page">
 
-      <!-- Left column: summary + experience -->
-      <div class="left-col">
+  <!-- ── MAIN COLUMN ── -->
+  <main>
 
-        {% if summary %}
-        <section class="summary">
-          <h2 class="section-label">About</h2>
-          <p>{{ summary }}</p>
-        </section>
-        {% endif %}
+    {% if summary %}
+    <blockquote class="summary">{{ summary }}</blockquote>
+    {% endif %}
 
-        {% if experience %}
-        <section>
-          <h2 class="section-label">Experience</h2>
-          {% for job in experience %}
-          <div class="job">
-            <div class="job-header">
-              <h3>{{ job.role }}</h3>
-              <span class="job-meta">{{ job.start }} – {{ job.end }}</span>
-            </div>
-            <div class="job-company">{{ job.company }}{% if job.location %} · {{ job.location }}{% endif %}</div>
-            {% if job.bullets %}
-            <ul class="job-bullets">
-              {% for bullet in job.bullets %}
-              <li>{{ bullet }}</li>
-              {% endfor %}
-            </ul>
-            {% endif %}
+    {% if experience %}
+    <section>
+      <h2 class="sec-title">Experience</h2>
+      <div class="exp-list">
+        {% for job in experience %}
+        <div class="exp-item">
+          <div class="exp-header">
+            <span class="exp-role">{{ job.role }}</span>
+            <span class="exp-dates">{{ job.start }} – {{ job.end }}</span>
           </div>
-          {% endfor %}
-        </section>
-        {% endif %}
-
-      </div><!-- /left-col -->
-
-      <!-- Right column: skills + education + certs -->
-      <div class="right-col">
-
-        {% if skills %}
-        <section>
-          <h2 class="section-label">Skills</h2>
-          <div class="skills-cloud">
-            {% for skill in skills %}
-            <span class="skill-tag">{{ skill }}</span>
-            {% endfor %}
-          </div>
-        </section>
-        {% endif %}
-
-        {% if education %}
-        <section>
-          <h2 class="section-label">Education</h2>
-          {% for ed in education %}
-          <div class="edu">
-            <h3>{{ ed.institution }}</h3>
-            <p class="degree">{{ ed.degree }}</p>
-            <p class="edu-meta">
-              {{ ed.start }}{% if ed.end %} – {{ ed.end }}{% endif %}
-              {% if ed.gpa %} · GPA {{ ed.gpa }}{% endif %}
-            </p>
-            {% if ed.notes %}<p class="edu-meta">{{ ed.notes }}</p>{% endif %}
-          </div>
-          {% endfor %}
-        </section>
-        {% endif %}
-
-        {% if certifications %}
-        <section>
-          <h2 class="section-label">Certifications</h2>
-          <ul class="cert-list">
-            {% for cert in certifications %}
-            <li>{{ cert }}</li>
-            {% endfor %}
+          <div class="exp-company">{{ job.company }}{% if job.location %} · {{ job.location }}{% endif %}</div>
+          {% if job.bullets %}
+          <ul class="exp-bullets">
+            {% for b in job.bullets %}<li>{{ b }}</li>{% endfor %}
           </ul>
-        </section>
-        {% endif %}
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
 
-      </div><!-- /right-col -->
+  </main>
 
-    </div><!-- /two-col -->
-  </div>
-</main>
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+
+    {% if skills %}
+    <section>
+      <h2 class="sec-title">Skills</h2>
+      {% if skills is mapping %}
+        {% for category, skill_list in skills.items() %}
+        <div class="skill-group">
+          <div class="skill-group-label">{{ category }}</div>
+          <div class="skill-tags">
+            {% for s in skill_list %}<span class="skill-tag">{{ s }}</span>{% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="skill-tags">
+          {% for s in skills %}<span class="skill-tag">{{ s }}</span>{% endfor %}
+        </div>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    {% if education %}
+    <section>
+      <h2 class="sec-title">Education</h2>
+      {% for ed in education %}
+      <div class="edu-item">
+        <div class="edu-school">{{ ed.institution }}</div>
+        <div class="edu-degree">{{ ed.degree }}</div>
+        <div class="edu-meta">{{ ed.start }}{% if ed.end %} – {{ ed.end }}{% endif %}{% if ed.gpa %} · GPA {{ ed.gpa }}{% endif %}</div>
+        {% if ed.notes %}<div class="edu-meta">{{ ed.notes }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if certifications %}
+    <section>
+      <h2 class="sec-title">Certifications</h2>
+      <ul class="cert-list">
+        {% for c in certifications %}<li>{{ c }}</li>{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+  </aside>
+
+</div>
 
 <footer>
-  Built with <a href="https://pagedin.app" target="_blank" rel="noopener">PagedIn</a> — paste your resume, get a live website.
+  Built with <a href="https://plasmacat420.github.io/pagedIn/" target="_blank" rel="noopener">PagedIn</a>
 </footer>
 
 </body>

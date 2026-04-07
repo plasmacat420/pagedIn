@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ company_name }}</title>
+  <meta name="description" content="{{ tagline or company_name }}"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;--border:#30363d;
+      --text:#e6edf3;--muted:#8b949e;--blue:#58a6ff;--blue-dim:rgba(88,166,255,.1);
+      --teal:#2dd4bf;--amber:#f59e0b;--green:#3fb950;
+      --mono:'SFMono-Regular','Consolas','Liberation Mono',Menlo,monospace;
+      --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      --serif:'Georgia','Times New Roman',serif;
+    }
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+
+    /* ── HERO ── */
+    .hero{background:var(--surface);border-bottom:1px solid var(--border);padding:4rem 0 3.5rem;text-align:center;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 60% 0%,rgba(45,212,191,.08) 0%,transparent 60%);pointer-events:none}
+    .hero::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 100%,rgba(88,166,255,.06) 0%,transparent 55%);pointer-events:none}
+    .hero-inner{max-width:760px;margin:0 auto;padding:0 2rem;position:relative}
+    .hero-badge{display:inline-block;background:rgba(45,212,191,.12);border:1px solid rgba(45,212,191,.3);color:var(--teal);font-size:.71rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.28rem .85rem;border-radius:999px;margin-bottom:1.25rem;font-family:var(--mono)}
+    .hero h1{font-size:2.9rem;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:.85rem;background:linear-gradient(135deg,#e6edf3 40%,var(--teal) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero .tagline{font-size:1.1rem;color:var(--muted);max-width:520px;margin:0 auto 2rem;line-height:1.7}
+    .hero-contact{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem 1.4rem;list-style:none}
+    .hero-contact li{font-size:.79rem;color:var(--muted);font-family:var(--mono)}
+    .hero-contact a{color:var(--blue);text-decoration:none}
+    .hero-contact a:hover{text-decoration:underline}
+
+    /* ── HIGHLIGHTS ── */
+    .highlights{background:linear-gradient(90deg,rgba(45,212,191,.12),rgba(88,166,255,.12));border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:1.75rem 0}
+    .highlights-inner{max-width:860px;margin:0 auto;padding:0 2rem;display:flex;justify-content:center;flex-wrap:wrap;gap:2.5rem}
+    .highlight-item{text-align:center}
+    .highlight-stat{font-size:2rem;font-weight:800;color:var(--teal);line-height:1}
+    .highlight-label{font-size:.72rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:.35rem}
+
+    /* ── LAYOUT ── */
+    .page{max-width:860px;margin:0 auto;padding:3rem 2rem 4rem}
+
+    /* ── SECTION COMMON ── */
+    .sec-title{font-family:var(--mono);font-size:.63rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:1.5rem;display:flex;align-items:center;gap:.5rem}
+    .sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+    /* ── ABOUT ── */
+    .about-box{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:1.5rem 1.75rem;font-size:.935rem;color:#c9d1d9;line-height:1.85;margin-bottom:3rem}
+
+    /* ── SERVICES ── */
+    .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.1rem;margin-bottom:3rem}
+    .service-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.4rem;transition:border-color .2s,box-shadow .2s}
+    .service-card:hover{border-color:rgba(45,212,191,.35);box-shadow:0 0 24px rgba(45,212,191,.07)}
+    .service-icon{font-size:1.65rem;margin-bottom:.75rem;display:block}
+    .service-name{font-weight:700;font-size:.975rem;color:var(--text);margin-bottom:.45rem}
+    .service-desc{font-size:.845rem;color:var(--muted);line-height:1.7}
+
+    /* ── TEAM ── */
+    .team-grid{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:3rem}
+    .team-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.1rem 1.3rem;display:flex;align-items:center;gap:1rem;min-width:180px;transition:border-color .15s}
+    .team-card:hover{border-color:rgba(88,166,255,.3)}
+    .team-avatar{width:44px;height:44px;border-radius:50%;background:var(--blue-dim);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.88rem;color:var(--blue);flex-shrink:0;border:1px solid rgba(88,166,255,.25)}
+    .team-name{font-weight:700;font-size:.9rem;color:var(--text)}
+    .team-role{font-size:.76rem;color:var(--muted);font-family:var(--mono)}
+
+    /* ── CONTACT ── */
+    .contact-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:2.5rem;display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center}
+    .contact-cta h2{font-size:1.55rem;font-weight:700;color:var(--text);margin-bottom:.5rem}
+    .contact-cta p{color:var(--muted);font-size:.9rem}
+    .contact-details{list-style:none;display:flex;flex-direction:column;gap:.65rem}
+    .contact-details li{display:flex;align-items:center;gap:.65rem;font-size:.855rem;color:var(--muted);font-family:var(--mono)}
+    .contact-details a{color:var(--blue);text-decoration:none}
+    .contact-details a:hover{text-decoration:underline}
+
+    /* ── FOOTER ── */
+    footer{text-align:center;padding:1.25rem;background:var(--surface);border-top:1px solid var(--border);font-size:.72rem;color:var(--muted);font-family:var(--mono);margin-top:3rem}
+    footer a{color:var(--blue);text-decoration:none}
+
+    @media(max-width:640px){
+      .hero h1{font-size:2.1rem}
+      .contact-section{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-inner">
+    {% if industry %}<span class="hero-badge">{{ industry }}</span>{% endif %}
+    <h1>{{ company_name }}</h1>
+    {% if tagline %}<p class="tagline">{{ tagline }}</p>{% endif %}
+    {% if contact %}
+    <ul class="hero-contact">
+      {% if contact.website %}<li><a href="{{ contact.website }}" target="_blank" rel="noopener">{{ contact.website }}</a></li>{% endif %}
+      {% if contact.email %}<li><a href="mailto:{{ contact.email }}">{{ contact.email }}</a></li>{% endif %}
+      {% if contact.phone %}<li>{{ contact.phone }}</li>{% endif %}
+      {% if contact.location %}<li>{{ contact.location }}</li>{% endif %}
+      {% if contact.linkedin %}<li><a href="{{ contact.linkedin }}" target="_blank" rel="noopener">LinkedIn ↗</a></li>{% endif %}
+    </ul>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── HIGHLIGHTS ── -->
+{% if highlights %}
+<div class="highlights">
+  <div class="highlights-inner">
+    {% for h in highlights %}
+    <div class="highlight-item">
+      <div class="highlight-stat">{{ h.stat }}</div>
+      <div class="highlight-label">{{ h.label }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="page">
+
+  <!-- ABOUT -->
+  {% if about %}
+  <section>
+    <h2 class="sec-title">About</h2>
+    <div class="about-box">{{ about }}</div>
+  </section>
+  {% endif %}
+
+  <!-- SERVICES -->
+  {% if services %}
+  <section>
+    <h2 class="sec-title">What We Do</h2>
+    <div class="services-grid">
+      {% for svc in services %}
+      <div class="service-card">
+        {% if svc.icon %}<span class="service-icon">{{ svc.icon }}</span>{% endif %}
+        <div class="service-name">{{ svc.name }}</div>
+        <div class="service-desc">{{ svc.description }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- TEAM -->
+  {% if team %}
+  <section>
+    <h2 class="sec-title">Our Team</h2>
+    <div class="team-grid">
+      {% for member in team %}
+      <div class="team-card">
+        <div class="team-avatar">{{ (member.name or '?')[:2].upper() }}</div>
+        <div>
+          <div class="team-name">{{ member.name }}</div>
+          <div class="team-role">{{ member.role }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- CONTACT -->
+  {% if contact %}
+  <div class="contact-section">
+    <div class="contact-cta">
+      <h2>Let's work together</h2>
+      <p>Reach out and we'll get back to you soon.</p>
+    </div>
+    <ul class="contact-details">
+      {% if contact.email %}<li>✉ <a href="mailto:{{ contact.email }}">{{ contact.email }}</a></li>{% endif %}
+      {% if contact.phone %}<li>☏ {{ contact.phone }}</li>{% endif %}
+      {% if contact.website %}<li>⌘ <a href="{{ contact.website }}" target="_blank" rel="noopener">{{ contact.website }}</a></li>{% endif %}
+      {% if contact.location %}<li>◎ {{ contact.location }}</li>{% endif %}
+      {% if contact.linkedin %}<li><a href="{{ contact.linkedin }}" target="_blank" rel="noopener">LinkedIn ↗</a></li>{% endif %}
+      {% if contact.twitter %}<li><a href="{{ contact.twitter }}" target="_blank" rel="noopener">Twitter / X ↗</a></li>{% endif %}
+    </ul>
+  </div>
+  {% endif %}
+
+</div>
+
+<footer>
+  Built with <a href="https://plasmacat420.github.io/pagedIn/" target="_blank" rel="noopener">PagedIn</a>
+</footer>
+
+</body>
+</html>

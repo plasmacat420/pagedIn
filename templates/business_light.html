@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ company_name }}</title>
+  <meta name="description" content="{{ tagline or company_name }}"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --navy:#1e293b;--navy-mid:#334155;--blue:#3b82f6;--blue-light:#eff6ff;--blue-mid:#dbeafe;
+      --text:#111827;--muted:#6b7280;--border:#e5e7eb;--bg:#f9fafb;--white:#ffffff;
+      --amber:#f59e0b;--green:#10b981;
+      --serif:'Georgia','Times New Roman',serif;
+      --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    }
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+
+    /* ── HERO ── */
+    .hero{background:var(--navy);color:#fff;padding:4rem 0 3.5rem;text-align:center;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 60% 0%,rgba(59,130,246,.25) 0%,transparent 65%);pointer-events:none}
+    .hero-inner{max-width:760px;margin:0 auto;padding:0 2rem;position:relative}
+    .hero-badge{display:inline-block;background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93c5fd;font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .85rem;border-radius:999px;margin-bottom:1.25rem}
+    .hero h1{font-family:var(--serif);font-size:3rem;font-weight:700;letter-spacing:-1px;line-height:1.1;margin-bottom:.85rem}
+    .hero .tagline{font-size:1.15rem;color:#93c5fd;font-weight:400;max-width:540px;margin:0 auto 2rem}
+    .hero-contact{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem 1.5rem;list-style:none}
+    .hero-contact li{font-size:.825rem;color:rgba(255,255,255,.65)}
+    .hero-contact a{color:#93c5fd;text-decoration:none}
+    .hero-contact a:hover{color:#fff}
+
+    /* ── HIGHLIGHTS ── */
+    .highlights{background:var(--blue);padding:1.75rem 0}
+    .highlights-inner{max-width:860px;margin:0 auto;padding:0 2rem;display:flex;justify-content:center;flex-wrap:wrap;gap:2rem}
+    .highlight-item{text-align:center;color:#fff}
+    .highlight-stat{font-size:2rem;font-weight:800;font-family:var(--serif);line-height:1}
+    .highlight-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;opacity:.8;margin-top:.3rem}
+
+    /* ── LAYOUT ── */
+    .page{max-width:860px;margin:0 auto;padding:3rem 2rem 4rem}
+
+    /* ── SECTION COMMON ── */
+    .sec-title{font-size:.63rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);border-bottom:2px solid var(--blue);padding-bottom:.35rem;margin-bottom:1.5rem}
+
+    /* ── ABOUT ── */
+    .about-box{background:var(--white);border:1px solid var(--border);border-left:4px solid var(--blue);border-radius:0 8px 8px 0;padding:1.5rem 1.75rem;font-size:.95rem;color:var(--navy-mid);line-height:1.85;margin-bottom:3rem}
+
+    /* ── SERVICES ── */
+    .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.25rem;margin-bottom:3rem}
+    .service-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:1.5rem;transition:box-shadow .2s,border-color .2s}
+    .service-card:hover{box-shadow:0 4px 20px rgba(59,130,246,.1);border-color:var(--blue-mid)}
+    .service-icon{font-size:1.75rem;margin-bottom:.75rem;display:block}
+    .service-name{font-weight:700;font-size:1rem;color:var(--navy);margin-bottom:.5rem}
+    .service-desc{font-size:.855rem;color:var(--muted);line-height:1.7}
+
+    /* ── TEAM ── */
+    .team-grid{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:3rem}
+    .team-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:1.1rem 1.3rem;display:flex;align-items:center;gap:1rem;min-width:180px}
+    .team-avatar{width:44px;height:44px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:var(--blue);flex-shrink:0}
+    .team-name{font-weight:700;font-size:.9rem;color:var(--navy)}
+    .team-role{font-size:.775rem;color:var(--muted)}
+
+    /* ── CONTACT ── */
+    .contact-section{background:var(--navy);color:#fff;border-radius:14px;padding:2.5rem;display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center}
+    .contact-cta h2{font-family:var(--serif);font-size:1.6rem;font-weight:700;margin-bottom:.5rem}
+    .contact-cta p{color:rgba(255,255,255,.7);font-size:.9rem}
+    .contact-details{list-style:none;display:flex;flex-direction:column;gap:.65rem}
+    .contact-details li{display:flex;align-items:center;gap:.65rem;font-size:.875rem;color:rgba(255,255,255,.8)}
+    .contact-details a{color:#93c5fd;text-decoration:none}
+    .contact-details a:hover{color:#fff}
+
+    /* ── FOOTER ── */
+    footer{text-align:center;padding:1.5rem;border-top:1px solid var(--border);font-size:.75rem;color:var(--muted);margin-top:3rem}
+    footer a{color:var(--blue);text-decoration:none}
+
+    @media(max-width:640px){
+      .hero h1{font-size:2.1rem}
+      .contact-section{grid-template-columns:1fr}
+      .highlights-inner{gap:1.5rem}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-inner">
+    {% if industry %}<span class="hero-badge">{{ industry }}</span>{% endif %}
+    <h1>{{ company_name }}</h1>
+    {% if tagline %}<p class="tagline">{{ tagline }}</p>{% endif %}
+    {% if contact %}
+    <ul class="hero-contact">
+      {% if contact.website %}<li><a href="{{ contact.website }}" target="_blank" rel="noopener">{{ contact.website }}</a></li>{% endif %}
+      {% if contact.email %}<li><a href="mailto:{{ contact.email }}">{{ contact.email }}</a></li>{% endif %}
+      {% if contact.phone %}<li>{{ contact.phone }}</li>{% endif %}
+      {% if contact.location %}<li>{{ contact.location }}</li>{% endif %}
+      {% if contact.linkedin %}<li><a href="{{ contact.linkedin }}" target="_blank" rel="noopener">LinkedIn ↗</a></li>{% endif %}
+    </ul>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── HIGHLIGHTS ── -->
+{% if highlights %}
+<div class="highlights">
+  <div class="highlights-inner">
+    {% for h in highlights %}
+    <div class="highlight-item">
+      <div class="highlight-stat">{{ h.stat }}</div>
+      <div class="highlight-label">{{ h.label }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="page">
+
+  <!-- ABOUT -->
+  {% if about %}
+  <section>
+    <h2 class="sec-title">About Us</h2>
+    <div class="about-box">{{ about }}</div>
+  </section>
+  {% endif %}
+
+  <!-- SERVICES -->
+  {% if services %}
+  <section>
+    <h2 class="sec-title">What We Do</h2>
+    <div class="services-grid">
+      {% for svc in services %}
+      <div class="service-card">
+        {% if svc.icon %}<span class="service-icon">{{ svc.icon }}</span>{% endif %}
+        <div class="service-name">{{ svc.name }}</div>
+        <div class="service-desc">{{ svc.description }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- TEAM -->
+  {% if team %}
+  <section>
+    <h2 class="sec-title">Our Team</h2>
+    <div class="team-grid">
+      {% for member in team %}
+      <div class="team-card">
+        <div class="team-avatar">{{ (member.name or '?')[:2].upper() }}</div>
+        <div>
+          <div class="team-name">{{ member.name }}</div>
+          <div class="team-role">{{ member.role }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- CONTACT -->
+  {% if contact %}
+  <div class="contact-section">
+    <div class="contact-cta">
+      <h2>Let's work together</h2>
+      <p>Reach out and we'll get back to you soon.</p>
+    </div>
+    <ul class="contact-details">
+      {% if contact.email %}<li>✉ <a href="mailto:{{ contact.email }}">{{ contact.email }}</a></li>{% endif %}
+      {% if contact.phone %}<li>☏ {{ contact.phone }}</li>{% endif %}
+      {% if contact.website %}<li>⌘ <a href="{{ contact.website }}" target="_blank" rel="noopener">{{ contact.website }}</a></li>{% endif %}
+      {% if contact.location %}<li>◎ {{ contact.location }}</li>{% endif %}
+      {% if contact.linkedin %}<li><a href="{{ contact.linkedin }}" target="_blank" rel="noopener">LinkedIn ↗</a></li>{% endif %}
+      {% if contact.twitter %}<li><a href="{{ contact.twitter }}" target="_blank" rel="noopener">Twitter / X ↗</a></li>{% endif %}
+    </ul>
+  </div>
+  {% endif %}
+
+</div>
+
+<footer>
+  Built with <a href="https://plasmacat420.github.io/pagedIn/" target="_blank" rel="noopener">PagedIn</a>
+</footer>
+
+</body>
+</html>
