@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ name }} — Resume</title>
+  <meta name="description" content="{{ summary[:160] if summary else name + ' — Professional Resume' }}" />
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #fafaf8;
+      --surface: #ffffff;
+      --border: #e8e8e4;
+      --text: #1a1a1a;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --heading-font: Georgia, 'Times New Roman', serif;
+      --body-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body-font);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* ── Layout ── */
+    .wrapper { max-width: 860px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* ── Header / Hero ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 3.5rem 0 3rem;
+    }
+    header .wrapper { display: flex; align-items: flex-start; gap: 2rem; }
+    .avatar {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: var(--accent-light);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--heading-font); font-size: 2rem; color: var(--accent);
+      flex-shrink: 0; border: 2px solid var(--border);
+    }
+    .header-text h1 {
+      font-family: var(--heading-font);
+      font-size: 2.4rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .header-text .title {
+      font-size: 1.05rem;
+      color: var(--accent);
+      font-weight: 500;
+      margin: 0.4rem 0 1rem;
+    }
+    .contact-links {
+      display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem;
+      list-style: none;
+    }
+    .contact-links li { display: flex; align-items: center; gap: 0.35rem; }
+    .contact-links a, .contact-links span {
+      color: var(--muted); font-size: 0.875rem; text-decoration: none;
+    }
+    .contact-links a:hover { color: var(--accent); }
+    .contact-links .icon { font-size: 0.8rem; }
+
+    /* ── Main content ── */
+    main { padding: 2.5rem 0 4rem; }
+    .two-col { display: grid; grid-template-columns: 1fr 280px; gap: 3rem; }
+
+    /* ── Sections ── */
+    section { margin-bottom: 2.5rem; }
+    .section-label {
+      font-family: var(--heading-font);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.2rem;
+    }
+
+    /* Summary */
+    .summary p { color: var(--text); font-size: 0.975rem; }
+
+    /* Experience */
+    .job + .job { margin-top: 1.8rem; padding-top: 1.8rem; border-top: 1px solid var(--border); }
+    .job-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.25rem; }
+    .job-header h3 { font-size: 1rem; font-weight: 600; color: var(--text); }
+    .job-meta { font-size: 0.825rem; color: var(--muted); }
+    .job-company { font-size: 0.9rem; color: var(--accent); font-weight: 500; margin-top: 0.1rem; }
+    .job-bullets { list-style: none; margin-top: 0.65rem; }
+    .job-bullets li {
+      position: relative; padding-left: 1.1rem; margin-bottom: 0.35rem;
+      font-size: 0.9rem; color: #374151;
+    }
+    .job-bullets li::before {
+      content: "–"; position: absolute; left: 0; color: var(--accent);
+    }
+
+    /* Skills */
+    .skills-cloud { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .skill-tag {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid #bfdbfe;
+    }
+
+    /* Education */
+    .edu + .edu { margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid var(--border); }
+    .edu h3 { font-size: 0.95rem; font-weight: 600; }
+    .edu .degree { font-size: 0.875rem; color: var(--accent); margin-top: 0.1rem; }
+    .edu .edu-meta { font-size: 0.825rem; color: var(--muted); margin-top: 0.1rem; }
+
+    /* Certifications */
+    .cert-list { list-style: none; }
+    .cert-list li {
+      font-size: 0.875rem; padding: 0.3rem 0;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    .cert-list li:last-child { border-bottom: none; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @media (max-width: 680px) {
+      .two-col { grid-template-columns: 1fr; }
+      header .wrapper { flex-direction: column; gap: 1rem; }
+      .header-text h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="wrapper">
+    <div class="avatar">{{ name[0] if name else "?" }}</div>
+    <div class="header-text">
+      <h1>{{ name }}</h1>
+      {% if title %}<p class="title">{{ title }}</p>{% endif %}
+      <ul class="contact-links">
+        {% if email %}<li><span class="icon">✉</span><a href="mailto:{{ email }}">{{ email }}</a></li>{% endif %}
+        {% if phone %}<li><span class="icon">☏</span><span>{{ phone }}</span></li>{% endif %}
+        {% if location %}<li><span class="icon">◎</span><span>{{ location }}</span></li>{% endif %}
+        {% if linkedin %}<li><span class="icon">in</span><a href="{{ linkedin }}" target="_blank" rel="noopener">LinkedIn</a></li>{% endif %}
+        {% if github %}<li><span class="icon">⌥</span><a href="{{ github }}" target="_blank" rel="noopener">GitHub</a></li>{% endif %}
+        {% if website %}<li><span class="icon">⊕</span><a href="{{ website }}" target="_blank" rel="noopener">Website</a></li>{% endif %}
+      </ul>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrapper">
+    <div class="two-col">
+
+      <!-- Left column: summary + experience -->
+      <div class="left-col">
+
+        {% if summary %}
+        <section class="summary">
+          <h2 class="section-label">About</h2>
+          <p>{{ summary }}</p>
+        </section>
+        {% endif %}
+
+        {% if experience %}
+        <section>
+          <h2 class="section-label">Experience</h2>
+          {% for job in experience %}
+          <div class="job">
+            <div class="job-header">
+              <h3>{{ job.role }}</h3>
+              <span class="job-meta">{{ job.start }} – {{ job.end }}</span>
+            </div>
+            <div class="job-company">{{ job.company }}{% if job.location %} · {{ job.location }}{% endif %}</div>
+            {% if job.bullets %}
+            <ul class="job-bullets">
+              {% for bullet in job.bullets %}
+              <li>{{ bullet }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </section>
+        {% endif %}
+
+      </div><!-- /left-col -->
+
+      <!-- Right column: skills + education + certs -->
+      <div class="right-col">
+
+        {% if skills %}
+        <section>
+          <h2 class="section-label">Skills</h2>
+          <div class="skills-cloud">
+            {% for skill in skills %}
+            <span class="skill-tag">{{ skill }}</span>
+            {% endfor %}
+          </div>
+        </section>
+        {% endif %}
+
+        {% if education %}
+        <section>
+          <h2 class="section-label">Education</h2>
+          {% for ed in education %}
+          <div class="edu">
+            <h3>{{ ed.institution }}</h3>
+            <p class="degree">{{ ed.degree }}</p>
+            <p class="edu-meta">
+              {{ ed.start }}{% if ed.end %} – {{ ed.end }}{% endif %}
+              {% if ed.gpa %} · GPA {{ ed.gpa }}{% endif %}
+            </p>
+            {% if ed.notes %}<p class="edu-meta">{{ ed.notes }}</p>{% endif %}
+          </div>
+          {% endfor %}
+        </section>
+        {% endif %}
+
+        {% if certifications %}
+        <section>
+          <h2 class="section-label">Certifications</h2>
+          <ul class="cert-list">
+            {% for cert in certifications %}
+            <li>{{ cert }}</li>
+            {% endfor %}
+          </ul>
+        </section>
+        {% endif %}
+
+      </div><!-- /right-col -->
+
+    </div><!-- /two-col -->
+  </div>
+</main>
+
+<footer>
+  Built with <a href="https://pagedin.app" target="_blank" rel="noopener">PagedIn</a> — paste your resume, get a live website.
+</footer>
+
+</body>
+</html>

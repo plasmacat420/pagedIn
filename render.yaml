@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: pagedin-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false   # set manually in Render dashboard
+      - key: GITHUB_OWNER_TOKEN
+        sync: false
+      - key: GITHUB_OWNER_ORG
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: HMAC_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      # REDIS_URL is optional — leave unset to use in-memory rate limiting
+      # - key: REDIS_URL
+      #   sync: false
