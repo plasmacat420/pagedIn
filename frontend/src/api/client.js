@@ -16,7 +16,7 @@ class ApiError extends Error {
 async function request(path, options = {}) {
   const url = `${BASE_URL}${path}`
   const res = await fetch(url, {
-    headers: { 'User-Agent': 'PagedIn-Frontend/1.0 Mozilla/5.0' },
+    // Note: browsers block custom User-Agent headers; the server accepts all browser UAs
     ...options,
   })
 

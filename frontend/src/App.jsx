@@ -10,12 +10,11 @@ import LoadingSteps from './components/LoadingSteps'
 import { generateSite } from './api/client'
 
 /**
- * App states:
- *  'landing'    → Hero + ResumeInput visible
- *  'parsing'    → Waiting for /parse
- *  'generating' → Waiting for /generate
- *  'preview'    → Preview + ThemeSelector visible
- *  'deploying'  → Waiting for /deploy/* (shown in DeployOptions component)
+ * App state machine:
+ *  'landing'    → Hero + ResumeInput
+ *  'generating' → Full-page loading (building site)
+ *  'preview'    → ThemeSelector + PreviewPanel + optional DeployOptions
+ *  'deploying'  → Full-page loading (GitHub Pages deploy in progress)
  *  'success'    → SuccessScreen
  */
 export default function App() {
@@ -32,7 +31,7 @@ export default function App() {
 
   const inputSectionRef = useRef(null)
 
-  // Handle GitHub OAuth callback (popup posts message to opener)
+  // Handle GitHub OAuth popup callback
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const code = params.get('code')
@@ -46,12 +45,10 @@ export default function App() {
     inputSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  // Called after ResumeInput successfully parses the resume.
-  // App state is already set to 'generating' by the caller.
+  // Called after ResumeInput successfully parses the resume
   const handleParsed = async (data) => {
     setParsedData(data)
     setError(null)
-
     try {
       const result = await generateSite(data, theme)
       setGeneratedHtml(result.html)
@@ -65,7 +62,6 @@ export default function App() {
     }
   }
 
-  // Rebuild: generate again with the same data but (possibly) new theme
   const handleRebuild = async () => {
     if (rebuildUsed || !parsedData) return
     setRebuilding(true)
@@ -74,7 +70,7 @@ export default function App() {
       const result = await generateSite(parsedData, theme)
       setGeneratedHtml(result.html)
       setDeployToken(result.deploy_token)
-      setRebuildUsed(true) // consume the one rebuild
+      setRebuildUsed(true)
     } catch (err) {
       setError(err.message || 'Rebuild failed. Please try again.')
     } finally {
@@ -82,14 +78,9 @@ export default function App() {
     }
   }
 
-  // When theme changes during preview, regenerate automatically
   const handleThemeChange = async (newTheme) => {
     setTheme(newTheme)
     if (!parsedData || appState !== 'preview') return
-
-    // If they haven't used rebuild yet, use it automatically on theme switch.
-    // If they have, just silently regenerate (theme switch after rebuild used is fine —
-    // the "1 rebuild" limit is for the explicit Rebuild button, not theme changes).
     setRebuilding(true)
     try {
       const result = await generateSite(parsedData, newTheme)
@@ -105,16 +96,28 @@ export default function App() {
   const handleDeploy = () => {
     setShowDeployOptions(true)
     setError(null)
-    // Scroll to deploy options
     setTimeout(() => {
       document.getElementById('deploy-options')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, 100)
+  }
+
+  // Called by DeployOptions the moment a deploy kicks off
+  const handleDeployStart = () => {
+    setAppState('deploying')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleDeployed = (url) => {
     setLiveUrl(url)
     setAppState('success')
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  // If deploy fails, come back to preview with error showing
+  const handleDeployError = (msg) => {
+    setError(msg)
+    setAppState('preview')
+    setShowDeployOptions(true)
   }
 
   const handleStartOver = () => {
@@ -129,14 +132,11 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const isLoading = appState === 'generating'
-  const loadingPhase = 'generating'
-
   return (
     <div className="min-h-screen">
       <Navbar />
 
-      {/* Global error banner */}
+      {/* ── Global error banner ─────────────────────────────────── */}
       {error && (
         <div className="fixed top-14 left-0 right-0 z-40 flex justify-center px-4 pt-3 pointer-events-none">
           <div className="bg-red-950/90 border border-red-500/30 text-red-300 text-sm rounded-xl px-5 py-3 shadow-lg max-w-xl w-full flex items-start gap-3 pointer-events-auto animate-slide-up">
@@ -159,10 +159,10 @@ export default function App() {
         </div>
       )}
 
-      {/* ── LOADING ─────────────────────────────────────────────── */}
-      {isLoading && (
+      {/* ── FULL-PAGE LOADING (generating or deploying) ─────────── */}
+      {(appState === 'generating' || appState === 'deploying') && (
         <div className="pt-14">
-          <LoadingSteps phase={loadingPhase} />
+          <LoadingSteps phase={appState === 'deploying' ? 'deploying' : 'generating'} />
         </div>
       )}
 
@@ -173,7 +173,6 @@ export default function App() {
           <div ref={inputSectionRef} className="pt-8">
             <ResumeInput
               onParsed={(data) => {
-                // Parsing is done inside ResumeInput; jump straight to generation loading
                 setAppState('generating')
                 window.scrollTo({ top: 0, behavior: 'smooth' })
                 handleParsed(data)
@@ -187,11 +186,8 @@ export default function App() {
       {/* ── PREVIEW ─────────────────────────────────────────────── */}
       {appState === 'preview' && generatedHtml && (
         <div className="pt-20">
-
-          {/* Theme selector */}
           <ThemeSelector theme={theme} onChange={handleThemeChange} />
 
-          {/* Preview with rebuild */}
           <PreviewPanel
             html={generatedHtml}
             rebuildUsed={rebuildUsed}
@@ -200,7 +196,6 @@ export default function App() {
             onDeploy={handleDeploy}
           />
 
-          {/* Deploy options */}
           {showDeployOptions && (
             <div id="deploy-options" className="animate-slide-up">
               <DeployOptions
@@ -208,12 +203,12 @@ export default function App() {
                 deployToken={deployToken}
                 parsedName={parsedData?.name || 'resume'}
                 firstName={parsedData?.name?.split(' ')[0] || 'my'}
+                onDeployStart={handleDeployStart}
                 onDeployed={handleDeployed}
-                onError={setError}
+                onError={handleDeployError}
               />
             </div>
           )}
-
         </div>
       )}
     </div>

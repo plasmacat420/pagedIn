@@ -12,7 +12,13 @@
       "Bash(curl -s https://api.render.com/v1/owners -H 'Authorization: Bearer rnd_JkT4REnYMkgJpp19LtANp4tBzj4S' -H 'Accept: application/json')",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(o['owner']['id'], o['owner']['name'], o['owner']['type']\\) for o in d]\")",
       "Bash(curl:*)",
-      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); dep=d[0]['deploy']; print\\(json.dumps\\(dep, indent=2\\)\\)\")"
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); dep=d[0]['deploy']; print\\(json.dumps\\(dep, indent=2\\)\\)\")",
+      "Bash(gh run:*)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('Set', len\\(d\\), 'env vars OK'\\)\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('Deploy triggered:', d.get\\('id'\\)\\)\")",
+      "Bash(git commit:*)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); dep=d[0]['deploy']; print\\(dep['status'], '|', dep['id']\\)\")",
+      "Bash(python -c \"import sys; print\\(sys.stdin.read\\(\\)[:2000]\\)\")"
     ]
   }
 }
