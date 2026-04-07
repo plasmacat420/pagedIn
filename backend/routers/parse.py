@@ -76,8 +76,8 @@ async def parse_endpoint(
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        logger.error(f"Parse error: {e}")
+        logger.error(f"Parse error: {type(e).__name__}: {e}")
         raise HTTPException(
             status_code=500,
-            detail="Resume parsing failed. Please try again in a moment."
+            detail=f"Resume parsing failed: {type(e).__name__}: {e}"
         )
