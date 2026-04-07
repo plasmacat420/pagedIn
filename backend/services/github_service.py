@@ -168,11 +168,11 @@ async def deploy_as_owner(html_content: str, parsed_name: str) -> str:
     await _push_file(token, org, repo_name, "index.html", html_content)
     await _enable_pages(token, org, repo_name)
 
+    # Return the expected URL immediately — Pages goes live within ~60s on its own.
+    # Polling here risks exceeding the server's request timeout.
     expected_url = f"https://{org}.github.io/{repo_name}"
-    live_url = await _wait_for_pages(token, org, repo_name, expected_url)
-
-    logger.info(f"Owner deploy complete: {live_url}")
-    return live_url
+    logger.info(f"Owner deploy complete: {expected_url}")
+    return expected_url
 
 
 async def deploy_as_user(html_content: str, user_token: str, first_name: str) -> str:
@@ -204,10 +204,8 @@ async def deploy_as_user(html_content: str, user_token: str, first_name: str) ->
     await _enable_pages(user_token, user_login, repo_name)
 
     expected_url = f"https://{user_login}.github.io/{repo_name}"
-    live_url = await _wait_for_pages(user_token, user_login, repo_name, expected_url)
-
-    logger.info(f"Self deploy complete for {user_login}: {live_url}")
-    return live_url
+    logger.info(f"Self deploy complete for {user_login}: {expected_url}")
+    return expected_url
 
 
 async def _is_org(token: str, name: str) -> bool:

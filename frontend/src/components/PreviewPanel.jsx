@@ -41,7 +41,7 @@ export default function PreviewPanel({ html, onDeploy }) {
           title="Site preview"
           className="w-full"
           style={{ height: '540px' }}
-          sandbox="allow-same-origin allow-popups"
+          sandbox="allow-same-origin allow-scripts allow-popups"
         />
       </div>
 
