@@ -13,7 +13,10 @@ logger = logging.getLogger(__name__)
 
 # Endpoints where we enforce a max body size
 SIZE_LIMITED_PATHS = {"/parse", "/generate"}
-MAX_BODY_BYTES = 50 * 1024  # 50 KB
+MAX_BODY_BYTES = {
+    "/parse":    500 * 1024,   # 500 KB — PDFs and long resumes can be large
+    "/generate": 100 * 1024,   # 100 KB — structured JSON + theme
+}
 
 # Bot UA patterns (case-insensitive substrings)
 BOT_UA_PATTERNS = [
@@ -69,7 +72,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         # ── Body size check ─────────────────────────────────────────────
         if path in SIZE_LIMITED_PATHS:
             content_length = request.headers.get("Content-Length")
-            if content_length and int(content_length) > MAX_BODY_BYTES:
+            limit = MAX_BODY_BYTES.get(path, 100 * 1024)
+            if content_length and int(content_length) > limit:
                 logger.warning(
                     f"OVERSIZED_REQUEST ip={ip} path={path} size={content_length}"
                 )

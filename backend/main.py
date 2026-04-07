@@ -39,12 +39,16 @@ app = FastAPI(
     redoc_url=None,
 )
 
-# ── CORS ────────────────────────────────────────────────────────────────────
-# Hardcoded allowed origins — avoids env var parsing issues on Render
+# ── Security & Rate Limiting ─────────────────────────────────────────────────
+app.add_middleware(SecurityMiddleware)
+app.add_middleware(RateLimitMiddleware)
+
+# ── CORS — must be added LAST so it is outermost and wraps every response ────
+# (Starlette applies middleware in reverse add order: last added = first to run)
 ALLOWED_ORIGINS = [
-    "https://plasmacat420.github.io",   # production frontend
-    "http://localhost:5173",             # local dev (Vite)
-    "http://localhost:3000",             # local dev (alt port)
+    "https://plasmacat420.github.io",
+    "http://localhost:5173",
+    "http://localhost:3000",
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -53,10 +57,6 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
-
-# ── Security & Rate Limiting (order matters — security runs first) ───────────
-app.add_middleware(SecurityMiddleware)
-app.add_middleware(RateLimitMiddleware)
 
 # ── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(parse.router)
