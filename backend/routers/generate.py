@@ -31,11 +31,13 @@ async def generate_endpoint(body: GenerateRequest):
             detail=f"Invalid theme. Choose one of: {', '.join(VALID_THEMES)}"
         )
 
-    if not body.resume.get("name"):
-        raise HTTPException(
-            status_code=400,
-            detail="Resume data must include at least a name."
-        )
+    doc_type = body.resume.get("doc_type", "resume")
+    if doc_type == "business":
+        if not body.resume.get("company_name"):
+            raise HTTPException(status_code=400, detail="Business document must include a company name.")
+    else:
+        if not body.resume.get("name"):
+            raise HTTPException(status_code=400, detail="Resume must include at least a name.")
 
     try:
         html = generate_html(body.resume, body.theme)

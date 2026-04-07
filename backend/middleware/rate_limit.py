@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 # --- Rate limit config per route path ---
 RATE_LIMITS = {
     "/parse":           {"max_requests": 3,  "window_seconds": 3600},   # 3/hour
-    "/generate":        {"max_requests": 3,  "window_seconds": 3600},   # 3/hour
+    "/generate":        {"max_requests": 10, "window_seconds": 3600},   # 10/hour (2 calls per session for dual-theme)
     "/deploy/pagedin":  {"max_requests": 2,  "window_seconds": 86400},  # 2/day
     "/deploy/self":     {"max_requests": 3,  "window_seconds": 86400},  # 3/day
 }
