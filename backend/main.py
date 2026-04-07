@@ -40,11 +40,16 @@ app = FastAPI(
 )
 
 # ── CORS ────────────────────────────────────────────────────────────────────
-frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+# Hardcoded allowed origins — avoids env var parsing issues on Render
+ALLOWED_ORIGINS = [
+    "https://plasmacat420.github.io",   # production frontend
+    "http://localhost:5173",             # local dev (Vite)
+    "http://localhost:3000",             # local dev (alt port)
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[frontend_url, "https://pagedin.github.io"],
-    allow_credentials=True,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
