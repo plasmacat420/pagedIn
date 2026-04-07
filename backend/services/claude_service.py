@@ -1,15 +1,18 @@
 """
-Resume parsing via Claude API.
+Resume parsing via Groq API (fast open-source model inference).
 Extracts structured data from raw resume text.
 """
 import json
 import logging
 import os
-from anthropic import AsyncAnthropic
+from openai import AsyncOpenAI
 
 logger = logging.getLogger(__name__)
 
-client = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+client = AsyncOpenAI(
+    api_key=os.getenv("GROQ_API_KEY"),
+    base_url="https://api.groq.com/openai/v1",
+)
 
 PARSE_SYSTEM_PROMPT = """You are an expert resume parser. Extract structured data from the provided resume text and return it as valid JSON.
 
@@ -58,24 +61,21 @@ Rules:
 
 
 async def parse_resume(text: str) -> dict:
-    """Use Claude to extract structured resume data from raw text."""
-    logger.info(f"Parsing resume ({len(text)} chars)")
+    """Use Grok to extract structured resume data from raw text."""
+    logger.info(f"Parsing resume ({len(text)} chars) via Groq/Llama")
 
-    message = await client.messages.create(
-        model="claude-sonnet-4-6",
+    response = await client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
         max_tokens=4096,
-        system=PARSE_SYSTEM_PROMPT,
         messages=[
-            {
-                "role": "user",
-                "content": f"Parse this resume:\n\n{text}"
-            }
-        ]
+            {"role": "system", "content": PARSE_SYSTEM_PROMPT},
+            {"role": "user", "content": f"Parse this resume:\n\n{text}"},
+        ],
     )
 
-    raw = message.content[0].text.strip()
+    raw = response.choices[0].message.content.strip()
 
-    # Strip markdown code fences if Claude wrapped the JSON
+    # Strip markdown code fences if Grok wrapped the JSON
     if raw.startswith("```"):
         lines = raw.split("\n")
         raw = "\n".join(lines[1:-1]) if lines[-1].strip() == "```" else "\n".join(lines[1:])
