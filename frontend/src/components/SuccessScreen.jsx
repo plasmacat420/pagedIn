@@ -1,11 +1,13 @@
 import { useEffect, useState, useRef } from 'react'
 import confetti from 'canvas-confetti'
 
-// GitHub Pages typically goes live in 60–120s after the API call.
-// We poll the URL every 8s using no-cors (opaque response = server replied = probably live).
-// Progress bar fills over PROGRESS_DURATION_MS regardless, as a fallback visual.
-const PROGRESS_DURATION_MS = 90_000
-const POLL_INTERVAL_MS = 8_000
+// GitHub Pages typically goes live in 90–150s after the API call.
+// no-cors HEAD succeeds as soon as GitHub's servers respond — even with a 404 (still building).
+// So we wait LIVE_CONFIRM_DELAY_MS after first detection before declaring live.
+const PROGRESS_DURATION_MS = 150_000
+const POLL_INTERVAL_MS     = 10_000
+const INITIAL_POLL_DELAY   = 60_000   // don't bother before 60s
+const LIVE_CONFIRM_DELAY   = 25_000   // after server responds, wait 25s more before showing live
 
 export default function SuccessScreen({ url, onStartOver }) {
   const [copied, setCopied]   = useState(false)
@@ -40,25 +42,32 @@ export default function SuccessScreen({ url, onStartOver }) {
     return () => cancelAnimationFrame(rafRef.current)
   }, [])
 
-  // Poll the URL — no-cors fetch: opaque response means server replied (= Pages is up)
+  // Poll the URL — no-cors HEAD: opaque response = GitHub servers replied.
+  // But they reply with 404 while still building, so we wait LIVE_CONFIRM_DELAY
+  // after first detection before declaring live.
   useEffect(() => {
+    let confirmed = false
+
     const poll = async () => {
+      if (confirmed) return
       try {
         await fetch(url, { method: 'HEAD', mode: 'no-cors', cache: 'no-store' })
-        // Opaque success — server responded. Pages is live.
-        setIsLive(true)
-        setProgress(100)
+        // Server responded — wait a bit more before calling it truly live
+        confirmed = true
         clearInterval(pollRef.current)
+        setTimeout(() => {
+          setIsLive(true)
+          setProgress(100)
+        }, LIVE_CONFIRM_DELAY)
       } catch {
-        // Network error — still building, try again next interval
+        // Still unreachable — try again next interval
       }
     }
 
-    // First poll after 20s (too early before that)
     const initialDelay = setTimeout(() => {
       poll()
       pollRef.current = setInterval(poll, POLL_INTERVAL_MS)
-    }, 20_000)
+    }, INITIAL_POLL_DELAY)
 
     return () => {
       clearTimeout(initialDelay)
