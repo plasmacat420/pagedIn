@@ -2,10 +2,10 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800/60 bg-slate-950/80 backdrop-blur-md">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <a href="https://plasmacat420.github.io/pagedIn/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <span className="text-xl">📄</span>
           <span className="font-bold text-white tracking-tight">PagedIn</span>
-        </div>
+        </a>
         <div className="flex items-center gap-4">
           <span className="hidden sm:block text-xs text-slate-500 font-mono">
             paste → preview → deploy
