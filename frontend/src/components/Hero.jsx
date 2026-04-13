@@ -77,8 +77,9 @@ export default function Hero({ onGetStarted }) {
 
       {/* Decorative blobs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-brand-500/5 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-violet-500/5 blur-3xl" />
+        <div className="absolute -top-60 -right-60 w-[600px] h-[600px] rounded-full bg-brand-500/10 blur-[120px]" />
+        <div className="absolute -bottom-60 -left-60 w-[600px] h-[600px] rounded-full bg-violet-600/10 blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full bg-brand-600/5 blur-[100px]" />
       </div>
 
     </section>
