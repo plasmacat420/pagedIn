@@ -80,6 +80,7 @@
 </head>
 <body>
 
+{% if cover_image %}<div style="width:100%;height:200px;overflow:hidden;line-height:0"><img src="{{ cover_image }}" alt="" style="width:100%;height:200px;object-fit:cover;display:block;opacity:0.75;filter:brightness(0.75)" loading="lazy"/></div>{% endif %}
 <div class="hero">
   <div class="hero-inner">
     <div>
