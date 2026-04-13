@@ -37,7 +37,7 @@ async def _github_request(
     token: str,
     **kwargs,
 ) -> httpx.Response:
-    """Make an authenticated GitHub API request."""
+    """Make an authenticated GitHub API request with timing."""
     headers = {
         "Authorization": f"Bearer {token}",
         "Accept": "application/vnd.github+json",
@@ -45,8 +45,12 @@ async def _github_request(
         "User-Agent": "PagedIn-App/1.0",
     }
     url = f"{GITHUB_API}{path}"
+    t0 = time.perf_counter()
     async with httpx.AsyncClient(timeout=30) as client:
         response = await client.request(method, url, headers=headers, **kwargs)
+    elapsed_ms = int((time.perf_counter() - t0) * 1000)
+    log = logger.warning if response.status_code >= 400 else logger.debug
+    log(f"GitHub {method} {path} → {response.status_code} ({elapsed_ms}ms)")
     return response
 
 
@@ -150,28 +154,33 @@ async def deploy_as_owner(html_content: str, parsed_name: str) -> str:
     if not token or not org:
         raise RuntimeError("Owner GitHub credentials not configured on this server.")
 
-    # Check if org is actually a user account (used for solo deployments)
+    t_start = time.perf_counter()
+
     is_org = await _is_org(token, org)
 
-    # Generate slug with random suffix to prevent collisions
     base_slug = _slugify(parsed_name) or "resume"
     suffix = _random_suffix()
     repo_name = f"{base_slug}-{suffix}"
 
-    # Retry once with a different suffix if there's a collision (rare)
+    logger.info(f"Deploy start: repo={repo_name} org={org}")
+
     try:
         await _create_repo(token, org, repo_name, is_org)
     except ValueError:
         repo_name = f"{base_slug}-{_random_suffix()}"
+        logger.info(f"Collision — retrying with repo={repo_name}")
         await _create_repo(token, org, repo_name, is_org)
 
-    await _push_file(token, org, repo_name, "index.html", html_content)
-    await _enable_pages(token, org, repo_name)
+    logger.info(f"Repo created: {repo_name} ({int((time.perf_counter()-t_start)*1000)}ms)")
 
-    # Return the expected URL immediately — Pages goes live within ~60s on its own.
-    # Polling here risks exceeding the server's request timeout.
+    await _push_file(token, org, repo_name, "index.html", html_content)
+    logger.info(f"File pushed: index.html ({int((time.perf_counter()-t_start)*1000)}ms)")
+
+    await _enable_pages(token, org, repo_name)
+    logger.info(f"Pages enabled ({int((time.perf_counter()-t_start)*1000)}ms)")
+
     expected_url = f"https://{org}.github.io/{repo_name}"
-    logger.info(f"Owner deploy complete: {expected_url}")
+    logger.info(f"Owner deploy done in {int((time.perf_counter()-t_start)*1000)}ms → {expected_url}")
     return expected_url
 
 
@@ -180,31 +189,38 @@ async def deploy_as_user(html_content: str, user_token: str, first_name: str) ->
     Deploy a resume site to a user's own GitHub account via OAuth token.
     Returns the live GitHub Pages URL.
     """
-    # Get the authenticated user's login
+    t_start = time.perf_counter()
+
     user_resp = await _github_request("GET", "/user", user_token)
     if user_resp.status_code != 200:
+        logger.error(f"GitHub /user failed: {user_resp.status_code}")
         raise RuntimeError("Failed to fetch GitHub user info. Please reconnect your account.")
     user_login = user_resp.json()["login"]
+    logger.info(f"Self deploy start: user={user_login}")
 
-    # Build repo name
     base_name = _slugify(first_name or "my") + "-resume-site"
     repo_name = base_name
 
-    # Handle existing repo — append number suffix
     for attempt in range(1, 6):
         try:
             await _create_repo(user_token, user_login, repo_name, is_org=False)
             break
         except ValueError:
+            logger.info(f"Repo collision attempt {attempt}: {repo_name}")
             repo_name = f"{base_name}-{attempt}"
     else:
         raise RuntimeError("Could not create a unique repository name. Please check your GitHub account.")
 
+    logger.info(f"Repo created: {repo_name} ({int((time.perf_counter()-t_start)*1000)}ms)")
+
     await _push_file(user_token, user_login, repo_name, "index.html", html_content)
+    logger.info(f"File pushed ({int((time.perf_counter()-t_start)*1000)}ms)")
+
     await _enable_pages(user_token, user_login, repo_name)
+    logger.info(f"Pages enabled ({int((time.perf_counter()-t_start)*1000)}ms)")
 
     expected_url = f"https://{user_login}.github.io/{repo_name}"
-    logger.info(f"Self deploy complete for {user_login}: {expected_url}")
+    logger.info(f"Self deploy done in {int((time.perf_counter()-t_start)*1000)}ms → {expected_url}")
     return expected_url
 
 

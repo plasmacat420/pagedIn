@@ -12,6 +12,7 @@ Safety gate runs first — inappropriate content is rejected before any extracti
 import json
 import logging
 import os
+import time
 from openai import AsyncOpenAI
 
 logger = logging.getLogger(__name__)
@@ -158,19 +159,32 @@ async def parse_resume(text: str) -> dict:
     Returns structured JSON with doc_type field.
     Raises ValueError if content is unsafe or parsing fails.
     """
-    logger.info(f"Parsing document ({len(text)} chars) via Groq/Llama")
+    logger.info(f"Groq/Llama request: {len(text)} chars input")
 
-    response = await client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        max_tokens=4096,
-        temperature=0.3,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user",   "content": f"Parse and enhance this document:\n\n{text}"},
-        ],
-    )
+    t0 = time.perf_counter()
+    try:
+        response = await client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            max_tokens=4096,
+            temperature=0.3,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user",   "content": f"Parse and enhance this document:\n\n{text}"},
+            ],
+        )
+    except Exception as e:
+        elapsed = int((time.perf_counter() - t0) * 1000)
+        logger.error(f"Groq API error after {elapsed}ms: {type(e).__name__}: {e}")
+        raise
+    elapsed = int((time.perf_counter() - t0) * 1000)
 
     raw = response.choices[0].message.content.strip()
+    usage = response.usage
+    logger.info(
+        f"Groq response: {elapsed}ms | "
+        f"tokens in={usage.prompt_tokens} out={usage.completion_tokens} | "
+        f"raw={len(raw)} chars"
+    )
 
     # Strip accidental markdown fences
     if raw.startswith("```"):
@@ -180,13 +194,13 @@ async def parse_resume(text: str) -> dict:
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as e:
-        logger.error(f"JSON parse error: {e} | Raw: {raw[:400]}")
+        logger.error(f"JSON parse error: {e} | Raw response preview: {raw[:500]}")
         raise ValueError("Failed to parse AI response. Please try again.")
 
     # Safety gate — raised as ValueError so parse router returns 422
     if not data.get("safe", True):
         reason = data.get("rejection_reason", "This content can't be published.")
-        logger.warning(f"Content rejected by safety check: {reason}")
+        logger.warning(f"Content rejected by safety gate: {reason}")
         raise ValueError(reason)
 
     doc_type = data.get("doc_type", "resume")
@@ -194,7 +208,7 @@ async def parse_resume(text: str) -> dict:
 
     label = (data.get("name") or data.get("company_name") or
              data.get("title") or "unknown")
-    logger.info(f"Parsed '{doc_type}' document: {label}")
+    logger.info(f"Parsed doc_type='{doc_type}' label='{label}'")
     return data
 
 

@@ -4,21 +4,44 @@
  */
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
+const IS_DEV = import.meta.env.DEV
+
+// ── Frontend logger ──────────────────────────────────────────────────────────
+// Groups errors in the browser console with full context so you can see exactly
+// what call failed, what the server returned, and how long it took.
+const log = {
+  info:  (...a) => IS_DEV && console.info('[PagedIn]', ...a),
+  warn:  (...a) => console.warn('[PagedIn]', ...a),
+  error: (...a) => console.error('[PagedIn]', ...a),
+}
 
 class ApiError extends Error {
-  constructor(message, status) {
+  constructor(message, status, path) {
     super(message)
     this.name = 'ApiError'
     this.status = status
+    this.path = path
   }
 }
 
 async function request(path, options = {}) {
   const url = `${BASE_URL}${path}`
-  const res = await fetch(url, {
-    // Note: browsers block custom User-Agent headers; the server accepts all browser UAs
-    ...options,
-  })
+  const t0 = performance.now()
+
+  let res
+  try {
+    res = await fetch(url, { ...options })
+  } catch (networkErr) {
+    const ms = Math.round(performance.now() - t0)
+    log.error(`NETWORK_ERROR ${options.method || 'GET'} ${path} (${ms}ms)`, networkErr.message)
+    throw new ApiError(
+      'Could not reach the server. Check your connection or try again.',
+      0,
+      path,
+    )
+  }
+
+  const ms = Math.round(performance.now() - t0)
 
   let data
   try {
@@ -29,9 +52,11 @@ async function request(path, options = {}) {
 
   if (!res.ok) {
     const msg = data?.detail || data?.message || `Request failed (${res.status})`
-    throw new ApiError(msg, res.status)
+    log.warn(`API_ERROR ${options.method || 'GET'} ${path} → ${res.status} (${ms}ms)`, msg)
+    throw new ApiError(msg, res.status, path)
   }
 
+  log.info(`${options.method || 'GET'} ${path} → ${res.status} (${ms}ms)`)
   return data
 }
 

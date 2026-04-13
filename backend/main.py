@@ -18,16 +18,35 @@ from middleware.rate_limit import RateLimitMiddleware
 from middleware.security import SecurityMiddleware
 from utils import counter
 
+_LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, _LOG_LEVEL, logging.INFO),
     format="%(asctime)s %(levelname)-8s [%(name)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
 
 
+def _check_env() -> None:
+    """Log which critical env vars are present/missing at startup."""
+    required = ["GROQ_API_KEY", "GITHUB_TOKEN", "GITHUB_ORG", "HMAC_SECRET"]
+    optional = ["REDIS_URL", "BASE_PAGES_DEPLOYED", "LOG_LEVEL"]
+    missing = [k for k in required if not os.getenv(k)]
+    present = [k for k in required if os.getenv(k)]
+    if present:
+        logger.info(f"ENV ok: {', '.join(present)}")
+    if missing:
+        logger.warning(f"ENV missing: {', '.join(missing)} — some features may not work")
+    for k in optional:
+        v = os.getenv(k)
+        if v:
+            logger.info(f"ENV {k}={'***' if 'KEY' in k or 'SECRET' in k or 'TOKEN' in k else v}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("PagedIn backend starting up ✓")
+    logger.info(f"PagedIn backend starting (log_level={_LOG_LEVEL})")
+    _check_env()
     yield
     logger.info("PagedIn backend shutting down")
 
@@ -55,11 +74,16 @@ async def request_id_middleware(request: Request, call_next):
 # ── Access logging ────────────────────────────────────────────────────────────
 @app.middleware("http")
 async def access_log_middleware(request: Request, call_next):
+    import time
+    t0 = time.perf_counter()
     response = await call_next(request)
+    elapsed_ms = int((time.perf_counter() - t0) * 1000)
     rid = getattr(request.state, "request_id", "-")
     ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "?")
-    logger.info(
-        f"[{rid}] {request.method} {request.url.path} → {response.status_code} | ip={ip.split(',')[0].strip()}"
+    status = response.status_code
+    log = logger.warning if status >= 400 else logger.info
+    log(
+        f"[{rid}] {request.method} {request.url.path} → {status} | {elapsed_ms}ms | ip={ip.split(',')[0].strip()}"
     )
     return response
 
