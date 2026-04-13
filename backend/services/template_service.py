@@ -1,6 +1,6 @@
 """
 Jinja2-based HTML generation.
-Routes to resume or business templates based on doc_type in the data.
+Routes to the best template based on doc_type + light/dark preference.
 Templates are fully self-contained HTML files with embedded CSS.
 """
 import logging
@@ -11,6 +11,15 @@ logger = logging.getLogger(__name__)
 
 TEMPLATES_DIR = Path(__file__).parent.parent.parent / "templates"
 VALID_THEMES = {"minimal_light", "modern_dark"}
+
+# Each doc_type maps to a light and dark template.
+# "minimal_light" → light mode, "modern_dark" → dark mode.
+TEMPLATE_MAP = {
+    "resume":    {"light": "minimal_light.html",  "dark": "modern_dark.html"},
+    "business":  {"light": "business_light.html", "dark": "business_dark.html"},
+    "portfolio": {"light": "portfolio_light.html","dark": "portfolio_dark.html"},
+    "landing":   {"light": "landing_light.html",  "dark": "landing_dark.html"},
+}
 
 _env: Environment | None = None
 
@@ -28,18 +37,16 @@ def _get_env() -> Environment:
 def generate_html(data: dict, theme: str) -> str:
     """
     Render a self-contained HTML page from structured document data.
-    Routes to business templates when doc_type == 'business'.
+    Template is chosen by doc_type + light/dark mode from theme string.
     """
     if theme not in VALID_THEMES:
         raise ValueError(f"Unknown theme '{theme}'. Valid: {', '.join(VALID_THEMES)}")
 
     doc_type = data.get("doc_type", "resume")
-    suffix = theme.split("_")[1]   # 'light' or 'dark'
+    mode = "dark" if "dark" in theme else "light"
 
-    if doc_type == "business":
-        template_name = f"business_{suffix}.html"
-    else:
-        template_name = f"{theme}.html"
+    templates = TEMPLATE_MAP.get(doc_type, TEMPLATE_MAP["resume"])
+    template_name = templates[mode]
 
     env = _get_env()
     try:
@@ -49,6 +56,7 @@ def generate_html(data: dict, theme: str) -> str:
         raise ValueError(f"Failed to load template '{template_name}'")
 
     html = template.render(**data)
-    label = data.get("name") or data.get("company_name", "?")
-    logger.info(f"Generated HTML ({len(html)} chars) theme={template_name} for '{label}'")
+    label = (data.get("name") or data.get("company_name") or
+             data.get("title") or "?")
+    logger.info(f"Generated HTML ({len(html):,} chars) template={template_name} for '{label}'")
     return html

@@ -1,29 +1,15 @@
 const THEMES = [
   {
     id: 'minimal_light',
-    name: 'Minimal Light',
-    description: 'Clean, classic, ATS-optimized',
-    colors: {
-      bg: '#f9fafb',
-      header: '#1e293b',
-      accent: '#3b82f6',
-      card: '#ffffff',
-      text: '#111827',
-      tag: '#eff6ff',
-    },
+    name: 'Light Mode',
+    description: 'Clean, bright, professional',
+    colors: { bg: '#f8fafc', header: '#0f172a', accent: '#6366f1', card: '#ffffff', text: '#0f172a', tag: '#eff6ff' },
   },
   {
     id: 'modern_dark',
-    name: 'Modern Dark',
-    description: 'Dark, technical, code aesthetic',
-    colors: {
-      bg: '#0d1117',
-      header: '#161b22',
-      accent: '#58a6ff',
-      card: '#161b22',
-      text: '#e6edf3',
-      tag: 'rgba(88,166,255,.15)',
-    },
+    name: 'Dark Mode',
+    description: 'Bold, dark, high contrast',
+    colors: { bg: '#09090b', header: '#111113', accent: '#8b5cf6', card: '#111113', text: '#fafafa', tag: 'rgba(139,92,246,.15)' },
   },
 ]
 
@@ -31,7 +17,7 @@ export default function ThemeSelector({ theme, onChange }) {
   return (
     <div className="max-w-3xl mx-auto px-4 mb-6">
       <p className="text-xs font-mono text-slate-500 mb-3 uppercase tracking-wider">
-        Choose a theme — switching is instant
+        Choose a style — the layout adapts to your document automatically
       </p>
       <div className="grid grid-cols-2 gap-3">
         {THEMES.map((t) => {
@@ -51,40 +37,24 @@ export default function ThemeSelector({ theme, onChange }) {
                 className="w-full h-20 rounded-lg mb-2.5 overflow-hidden flex flex-col"
                 style={{ background: t.colors.bg }}
               >
-                {/* Header bar */}
-                <div
-                  className="w-full flex-shrink-0 px-2 py-1.5 flex items-center gap-1.5"
-                  style={{ background: t.colors.header }}
-                >
-                  <div className="w-4 h-4 rounded-full opacity-80" style={{ background: t.colors.accent }} />
-                  <div className="h-1.5 rounded-full w-12 opacity-70" style={{ background: '#fff' }} />
-                  <div className="ml-auto h-1 rounded-full w-8 opacity-30" style={{ background: '#fff' }} />
+                {/* Header */}
+                <div className="w-full flex-shrink-0 px-2 py-1.5 flex items-center gap-1.5"
+                  style={{ background: t.colors.header }}>
+                  <div className="w-4 h-4 rounded-full" style={{ background: t.colors.accent, opacity: .9 }} />
+                  <div className="h-1.5 rounded-full w-12" style={{ background: '#fff', opacity: .6 }} />
+                  <div className="ml-auto h-1 rounded-full w-6" style={{ background: '#fff', opacity: .25 }} />
                 </div>
-                {/* Content area */}
+                {/* Content */}
                 <div className="flex flex-1 gap-1.5 p-1.5">
-                  {/* Main col */}
-                  <div className="flex-1 flex flex-col gap-1">
-                    <div className="h-1.5 rounded-full w-4/5" style={{ background: t.colors.text, opacity: .25 }} />
-                    <div className="h-1 rounded-full w-3/5" style={{ background: t.colors.accent, opacity: .6 }} />
-                    <div
-                      className="flex-1 rounded mt-0.5"
-                      style={{ background: t.colors.card, border: `1px solid ${t.colors.text}18` }}
-                    />
+                  <div className="flex-1 flex flex-col gap-1 justify-center">
+                    <div className="h-2 rounded-full w-4/5" style={{ background: t.colors.text, opacity: .2 }} />
+                    <div className="h-1.5 rounded-full w-2/5" style={{ background: t.colors.accent, opacity: .7 }} />
+                    <div className="h-1 rounded-full w-3/5" style={{ background: t.colors.text, opacity: .12 }} />
                   </div>
-                  {/* Sidebar col */}
-                  <div className="w-10 flex flex-col gap-1">
-                    <div
-                      className="h-2 rounded-sm"
-                      style={{ background: t.colors.tag }}
-                    />
-                    <div
-                      className="h-2 rounded-sm"
-                      style={{ background: t.colors.tag, opacity: .7 }}
-                    />
-                    <div
-                      className="h-2 rounded-sm"
-                      style={{ background: t.colors.tag, opacity: .5 }}
-                    />
+                  <div className="w-12 flex flex-col gap-1 justify-center">
+                    {[1, .7, .5].map((o, i) => (
+                      <div key={i} className="h-2 rounded" style={{ background: t.colors.tag, opacity: o }} />
+                    ))}
                   </div>
                 </div>
               </div>

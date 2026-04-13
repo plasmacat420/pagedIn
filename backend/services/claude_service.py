@@ -1,11 +1,13 @@
 """
 Document parsing + enhancement via Groq (Llama-3.3-70b).
 
-Handles two document types:
-  - resume: extracts, categorises skills, rewrites bullets, writes summary
-  - business: extracts brand info and writes compelling copy
+Handles 4 document families, each with its own template:
+  - resume    : CV, professional history
+  - business  : company, brand, agency, startup
+  - portfolio : developer/designer/creative project showcase
+  - landing   : personal brand, nonprofit, event, musician, athlete, coach, other
 
-Returns structured JSON with a `doc_type` field that drives template selection.
+Safety gate runs first — inappropriate content is rejected before any extraction.
 """
 import json
 import logging
@@ -19,32 +21,42 @@ client = AsyncOpenAI(
     base_url="https://api.groq.com/openai/v1",
 )
 
-# ── Prompts ────────────────────────────────────────────────────────────────
+SYSTEM_PROMPT = """You are PagedIn — an AI that reads any professional document and transforms it into structured data for a beautiful public webpage.
 
-SYSTEM_PROMPT = """You are an expert content strategist, resume coach, and brand copywriter.
+━━━ STEP 1: SAFETY CHECK ━━━
+Determine if this content is safe to publish publicly.
+Reject (safe: false) ONLY if the document contains:
+• NSFW, sexual, or adult content
+• Hate speech, discrimination, or harassment
+• Instructions for illegal activity
+• Spam, phishing, or scam content
+• Complete gibberish with zero real information
 
-Your job is to read a document and return a single JSON object — no markdown, no explanation.
+Everything else is acceptable: resumes, businesses, portfolios, musicians, athletes, coaches, nonprofits, events, personal brands, freelancers, students, creators — all welcome.
 
-STEP 1 — Determine document type:
-- "resume": a personal CV / resume listing work history, skills, education
-- "business": a company brochure, pitch deck, one-pager, service menu, business profile
+If rejected, return ONLY:
+{"safe": false, "rejection_reason": "Short, friendly explanation of why this can't be published."}
 
-STEP 2 — Extract and ENHANCE based on type.
+━━━ STEP 2: CLASSIFY ━━━
+Pick the best doc_type:
+• "resume"    — personal CV, professional history, job seeker
+• "business"  — company, agency, startup, product, service business, brand
+• "portfolio" — showcase of work: developer, designer, photographer, artist, writer, filmmaker
+• "landing"   — everything else: personal brand, musician, athlete, coach, speaker, nonprofit, event, influencer, freelancer without a portfolio focus
 
-═══════════════════════════════════════════
-IF RESUME — return exactly this shape:
-═══════════════════════════════════════════
+━━━ STEP 3: EXTRACT + ENHANCE ━━━
+Extract all relevant information and write compelling copy. Do NOT just copy text verbatim — rewrite it to sound professional and engaging.
+
+══════════════════════════════════════
+RESUME schema:
+══════════════════════════════════════
 {
+  "safe": true,
   "doc_type": "resume",
   "name": "Full Name",
   "title": "Professional Title (e.g. Senior Software Engineer)",
-  "summary": "Write a compelling 2–3 sentence professional summary. Lead with their strongest trait, mention key technologies/domains, end with value they bring. Never start with 'I'.",
-  "email": "email or empty string",
-  "phone": "phone or empty string",
-  "location": "City, Country or empty string",
-  "linkedin": "full URL or empty string",
-  "github": "full URL or empty string",
-  "website": "full URL or empty string",
+  "summary": "Compelling 2–3 sentence professional summary. Never start with 'I'. Lead with strongest trait, mention key technologies/domains, end with the value they bring.",
+  "email": "", "phone": "", "location": "City, Country", "linkedin": "", "github": "", "website": "",
   "skills": {
     "CategoryName": ["skill1", "skill2"],
     "AnotherCategory": ["skill3"]
@@ -57,93 +69,106 @@ IF RESUME — return exactly this shape:
       "end": "Month Year or Present",
       "location": "City or Remote",
       "bullets": [
-        "Strong rewritten bullet: action verb → specific contribution → measurable result. Max 140 chars.",
-        "Another strong bullet"
+        "Strong rewritten bullet: action verb → specific contribution → measurable result. Max 140 chars."
       ]
     }
   ],
   "education": [
-    {
-      "institution": "School Name",
-      "degree": "Degree, Field",
-      "start": "Year",
-      "end": "Year or Present",
-      "gpa": "GPA or empty string",
-      "notes": "Honors, relevant coursework, or empty"
-    }
+    {"institution": "", "degree": "Degree, Field", "start": "Year", "end": "Year", "gpa": "", "notes": ""}
   ],
   "certifications": ["Cert Name (Issuer, Year)"]
 }
+Resume rules: Group skills into logical categories (Languages, Frameworks, Tools, Cloud & DevOps, etc). Rewrite every bullet with strong action verb + impact. Sort experience newest first.
 
-RESUME enhancement rules:
-- skills: group into logical categories (Languages, Frameworks, Tools, Cloud & DevOps, Databases, etc.). Never leave uncategorized.
-- bullets: rewrite every bullet. Format = [Strong action verb] + [what you built/did] + [impact/result]. If no metric exists, imply scope or scale. Keep under 140 chars.
-- summary: write it fresh if missing or weak. Make it genuinely compelling.
-- Sort experience newest first.
-
-═══════════════════════════════════════════
-IF BUSINESS — return exactly this shape:
-═══════════════════════════════════════════
+══════════════════════════════════════
+BUSINESS schema:
+══════════════════════════════════════
 {
+  "safe": true,
   "doc_type": "business",
-  "company_name": "Company Name",
-  "tagline": "A punchy one-line value proposition. Max 10 words.",
-  "industry": "e.g. SaaS, Healthcare, Retail, Consulting",
-  "about": "Write 3–4 compelling sentences about this company. What they do, who they serve, what makes them different, their mission.",
+  "company_name": "",
+  "tagline": "Punchy benefit-led value prop. Max 10 words. Never generic.",
+  "industry": "e.g. SaaS, Healthcare, Consulting",
+  "about": "Write 3–4 compelling sentences: what they do, who they serve, what makes them different, their mission.",
   "services": [
+    {"name": "Service Name", "description": "2 sentences: what it is + the value it delivers.", "icon": "single emoji"}
+  ],
+  "highlights": [{"stat": "10K+", "label": "Customers Served"}],
+  "contact": {"email": "", "phone": "", "website": "", "location": "", "linkedin": "", "twitter": ""},
+  "team": [{"name": "", "role": ""}]
+}
+Business rules: tagline must be specific and punchy. Write about section fresh. Group features into logical service offerings.
+
+══════════════════════════════════════
+PORTFOLIO schema:
+══════════════════════════════════════
+{
+  "safe": true,
+  "doc_type": "portfolio",
+  "name": "Full Name",
+  "title": "e.g. Full Stack Developer · UI Designer · Photographer",
+  "tagline": "One punchy line about what you create or stand for. Max 12 words.",
+  "about": "2–3 sentences: who you are, what you build or create, what drives you.",
+  "email": "", "location": "", "github": "", "linkedin": "", "website": "", "twitter": "",
+  "projects": [
     {
-      "name": "Service or Product Name",
-      "description": "2 sentence description of what it is and the value it delivers.",
-      "icon": "single relevant emoji"
+      "name": "Project Name",
+      "description": "2 sentences: what it is and why it matters or what you built.",
+      "tags": ["React", "Python", "AI"],
+      "url": "",
+      "year": "2024"
     }
   ],
-  "highlights": [
-    { "stat": "10K+", "label": "Customers Served" },
-    { "stat": "5 years", "label": "In Business" }
-  ],
-  "contact": {
-    "email": "or empty string",
-    "phone": "or empty string",
-    "website": "full URL or empty string",
-    "location": "City, Country or empty string",
-    "linkedin": "full URL or empty string",
-    "twitter": "full URL or empty string"
-  },
-  "team": [
-    { "name": "Person Name", "role": "Title" }
-  ]
+  "skills": {"Category": ["skill1", "skill2"]},
+  "experience": [{"company": "", "role": "", "start": "", "end": ""}]
 }
+Portfolio rules: extract ALL projects — apps, sites, designs, photos, artwork, writing samples. tags = technologies or creative mediums used. Make tagline memorable.
 
-BUSINESS enhancement rules:
-- tagline: punchy, benefit-led. Never generic ("Your trusted partner").
-- about: write it — don't copy verbatim, make it flow.
-- services: if the doc lists features, group them into logical service offerings. Write descriptions, don't just list names.
-- highlights: extract any numbers/stats. If none exist, omit the array (empty []).
-- team: only include if names+roles are clearly stated.
+══════════════════════════════════════
+LANDING schema (personal brand, nonprofit, event, musician, athlete, coach, speaker, etc.):
+══════════════════════════════════════
+{
+  "safe": true,
+  "doc_type": "landing",
+  "title": "Name or Organization Name",
+  "headline": "Bold 5–8 word statement capturing their identity or mission.",
+  "subheadline": "1–2 sentences expanding the headline. Specific and compelling.",
+  "about": "3–4 sentence paragraph. Who they are, what they do, what makes them remarkable.",
+  "features": [
+    {"icon": "single emoji", "title": "Offering or Strength", "description": "1–2 sentences of value."}
+  ],
+  "highlights": [{"stat": "500+", "label": "Shows Performed"}],
+  "team": [{"name": "", "role": ""}],
+  "contact": {"email": "", "phone": "", "website": "", "location": "", "linkedin": "", "twitter": "", "instagram": ""},
+  "cta_text": "Compelling action phrase (e.g. Book a Session, See My Work, Join the Mission)",
+  "cta_url": ""
+}
+Landing rules: headline must be bold and memorable — not generic. features = their main offerings, skills, or reasons to care. highlights = any numbers or achievements worth showcasing.
 
-Return ONLY the JSON object. No markdown fences. No commentary."""
+Return ONLY the JSON object. No markdown. No explanation."""
 
 
 async def parse_resume(text: str) -> dict:
     """
-    Parse and enhance a document (resume or business doc) using Groq.
+    Parse and enhance any professional document using Groq.
     Returns structured JSON with doc_type field.
+    Raises ValueError if content is unsafe or parsing fails.
     """
     logger.info(f"Parsing document ({len(text)} chars) via Groq/Llama")
 
     response = await client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         max_tokens=4096,
-        temperature=0.3,       # low temperature for structured extraction; slight warmth for copy
+        temperature=0.3,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"Parse and enhance this document:\n\n{text}"},
+            {"role": "user",   "content": f"Parse and enhance this document:\n\n{text}"},
         ],
     )
 
     raw = response.choices[0].message.content.strip()
 
-    # Strip any accidental markdown fences
+    # Strip accidental markdown fences
     if raw.startswith("```"):
         lines = raw.split("\n")
         raw = "\n".join(lines[1:-1]) if lines[-1].strip() == "```" else "\n".join(lines[1:])
@@ -154,57 +179,76 @@ async def parse_resume(text: str) -> dict:
         logger.error(f"JSON parse error: {e} | Raw: {raw[:400]}")
         raise ValueError("Failed to parse AI response. Please try again.")
 
-    doc_type = data.get("doc_type", "resume")
+    # Safety gate — raised as ValueError so parse router returns 422
+    if not data.get("safe", True):
+        reason = data.get("rejection_reason", "This content can't be published.")
+        logger.warning(f"Content rejected by safety check: {reason}")
+        raise ValueError(reason)
 
+    doc_type = data.get("doc_type", "resume")
+    _apply_defaults(data, doc_type)
+
+    label = (data.get("name") or data.get("company_name") or
+             data.get("title") or "unknown")
+    logger.info(f"Parsed '{doc_type}' document: {label}")
+    return data
+
+
+def _apply_defaults(data: dict, doc_type: str) -> None:
     if doc_type == "resume":
         _apply_resume_defaults(data)
-    else:
+    elif doc_type == "business":
         _apply_business_defaults(data)
-
-    logger.info(f"Parsed '{doc_type}' document: {data.get('name') or data.get('company_name', '?')}")
-    return data
+    elif doc_type == "portfolio":
+        _apply_portfolio_defaults(data)
+    else:
+        _apply_landing_defaults(data)
 
 
 def _apply_resume_defaults(data: dict) -> None:
     defaults = {
-        "name": "Your Name",
-        "title": "",
-        "summary": "",
-        "email": "",
-        "phone": "",
-        "location": "",
-        "linkedin": "",
-        "github": "",
-        "website": "",
-        "skills": {},
-        "experience": [],
-        "education": [],
-        "certifications": [],
+        "name": "Your Name", "title": "", "summary": "",
+        "email": "", "phone": "", "location": "",
+        "linkedin": "", "github": "", "website": "",
+        "skills": {}, "experience": [], "education": [], "certifications": [],
     }
     for k, v in defaults.items():
         data.setdefault(k, v)
-
-    # Normalise skills: if it came back as a flat list, wrap it
     if isinstance(data["skills"], list):
         data["skills"] = {"Skills": data["skills"]}
 
 
 def _apply_business_defaults(data: dict) -> None:
     defaults = {
-        "company_name": "Company Name",
-        "tagline": "",
-        "industry": "",
-        "about": "",
-        "services": [],
-        "highlights": [],
-        "contact": {},
-        "team": [],
+        "company_name": "Company Name", "tagline": "", "industry": "",
+        "about": "", "services": [], "highlights": [], "contact": {}, "team": [],
     }
     for k, v in defaults.items():
         data.setdefault(k, v)
-    data["contact"].setdefault("email", "")
-    data["contact"].setdefault("phone", "")
-    data["contact"].setdefault("website", "")
-    data["contact"].setdefault("location", "")
-    data["contact"].setdefault("linkedin", "")
-    data["contact"].setdefault("twitter", "")
+    for f in ("email", "phone", "website", "location", "linkedin", "twitter"):
+        data["contact"].setdefault(f, "")
+
+
+def _apply_portfolio_defaults(data: dict) -> None:
+    defaults = {
+        "name": "Your Name", "title": "", "tagline": "", "about": "",
+        "email": "", "location": "", "github": "", "linkedin": "",
+        "website": "", "twitter": "",
+        "projects": [], "skills": {}, "experience": [],
+    }
+    for k, v in defaults.items():
+        data.setdefault(k, v)
+    if isinstance(data["skills"], list):
+        data["skills"] = {"Skills": data["skills"]}
+
+
+def _apply_landing_defaults(data: dict) -> None:
+    defaults = {
+        "title": "My Page", "headline": "", "subheadline": "",
+        "about": "", "features": [], "highlights": [],
+        "team": [], "contact": {}, "cta_text": "", "cta_url": "",
+    }
+    for k, v in defaults.items():
+        data.setdefault(k, v)
+    for f in ("email", "phone", "website", "location", "linkedin", "twitter", "instagram"):
+        data["contact"].setdefault(f, "")

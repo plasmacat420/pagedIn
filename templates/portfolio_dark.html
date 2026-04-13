@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ name }} — Portfolio</title>
+  <meta name="description" content="{{ tagline or about[:160] if about else name }}"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;--border:#30363d;
+      --text:#e6edf3;--muted:#8b949e;--cyan:#06b6d4;--cyan-dim:rgba(6,182,212,.1);
+      --green:#3fb950;--amber:#f59e0b;
+      --mono:'SFMono-Regular','Consolas',monospace;
+      --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    }
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+
+    /* ── HERO ── */
+    .hero{background:var(--surface);border-bottom:1px solid var(--border);padding:3.5rem 0 3rem;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(6,182,212,.07) 0%,transparent 65%);pointer-events:none}
+    .hero-inner{max-width:900px;margin:0 auto;padding:0 2rem;display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:center;position:relative}
+    .hero h1{font-size:2.4rem;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:.5rem}
+    .hero .hl{background:linear-gradient(135deg,#e6edf3 30%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero .title{font-size:.9rem;color:var(--cyan);font-family:var(--mono);margin-bottom:.6rem}
+    .hero .title::before{content:'> ';opacity:.5}
+    .hero .tagline{font-size:.95rem;color:var(--muted);max-width:480px;line-height:1.7;margin-bottom:1.25rem}
+    .links{display:flex;flex-wrap:wrap;gap:.4rem .85rem;list-style:none}
+    .links a{font-size:.79rem;color:var(--muted);text-decoration:none;font-family:var(--mono);transition:color .15s}
+    .links a:hover{color:var(--cyan)}
+    .avatar{width:80px;height:80px;border-radius:12px;background:var(--cyan-dim);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:800;color:var(--cyan);flex-shrink:0;border:1px solid rgba(6,182,212,.3)}
+
+    /* ── LAYOUT ── */
+    .page{max-width:900px;margin:0 auto;padding:3rem 2rem 5rem}
+
+    /* ── SECTION ── */
+    section{margin-bottom:3rem}
+    .sec-title{font-family:var(--mono);font-size:.63rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);margin-bottom:1.5rem;display:flex;align-items:center;gap:.5rem}
+    .sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+    /* ── ABOUT ── */
+    .about-text{font-size:.925rem;color:#c9d1d9;line-height:1.85;border-left:3px solid var(--cyan);padding-left:1.25rem}
+
+    /* ── PROJECTS ── */
+    .projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.1rem}
+    .project-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.35rem;display:flex;flex-direction:column;gap:.75rem;transition:border-color .2s,box-shadow .2s}
+    .project-card:hover{border-color:rgba(6,182,212,.4);box-shadow:0 0 30px rgba(6,182,212,.07)}
+    .project-header{display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem}
+    .project-name{font-weight:700;font-size:.975rem;color:var(--text)}
+    .project-year{font-size:.71rem;color:var(--muted);font-family:var(--mono);background:var(--surface2);padding:.15rem .45rem;border-radius:4px;border:1px solid var(--border);white-space:nowrap}
+    .project-desc{font-size:.845rem;color:var(--muted);line-height:1.7;flex:1}
+    .project-tags{display:flex;flex-wrap:wrap;gap:.3rem}
+    .project-tag{font-size:.7rem;font-family:var(--mono);color:var(--cyan);background:var(--cyan-dim);border:1px solid rgba(6,182,212,.25);padding:.15rem .5rem;border-radius:4px}
+    .project-link{font-size:.78rem;color:var(--cyan);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:.25rem;font-family:var(--mono)}
+    .project-link:hover{text-decoration:underline}
+
+    /* ── SKILLS ── */
+    .skills-grid{display:flex;flex-direction:column;gap:1rem}
+    .skill-group-label{font-family:var(--mono);font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--amber);margin-bottom:.45rem}
+    .skill-tags{display:flex;flex-wrap:wrap;gap:.3rem}
+    .skill-tag{font-size:.72rem;font-family:var(--mono);color:var(--text);background:var(--surface2);border:1px solid var(--border);padding:.2rem .55rem;border-radius:4px}
+
+    /* ── EXPERIENCE ── */
+    .exp-list{display:flex;flex-direction:column;gap:.65rem}
+    .exp-item{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:.25rem;padding:.85rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+    .exp-role{font-weight:600;font-size:.9rem;color:var(--text)}
+    .exp-company{font-size:.83rem;color:var(--cyan);font-family:var(--mono)}
+    .exp-dates{font-size:.74rem;color:var(--muted);font-family:var(--mono)}
+
+    /* ── FOOTER ── */
+    footer{text-align:center;padding:1.25rem;background:var(--surface);border-top:1px solid var(--border);font-size:.72rem;color:var(--muted);font-family:var(--mono)}
+    footer a{color:var(--cyan);text-decoration:none}
+
+    @media(max-width:640px){
+      .hero-inner{grid-template-columns:1fr}.avatar{display:none}
+      .hero h1{font-size:1.85rem}
+    }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div>
+      <h1><span class="hl">{{ name }}</span></h1>
+      {% if title %}<p class="title">{{ title }}</p>{% endif %}
+      {% if tagline %}<p class="tagline">{{ tagline }}</p>{% endif %}
+      <ul class="links">
+        {% if email %}<li><a href="mailto:{{ email }}">✉ {{ email }}</a></li>{% endif %}
+        {% if location %}<li><a href="#">◎ {{ location }}</a></li>{% endif %}
+        {% if github %}<li><a href="{{ github }}" target="_blank" rel="noopener">github ↗</a></li>{% endif %}
+        {% if linkedin %}<li><a href="{{ linkedin }}" target="_blank" rel="noopener">linkedin ↗</a></li>{% endif %}
+        {% if website %}<li><a href="{{ website }}" target="_blank" rel="noopener">portfolio ↗</a></li>{% endif %}
+        {% if twitter %}<li><a href="{{ twitter }}" target="_blank" rel="noopener">twitter ↗</a></li>{% endif %}
+      </ul>
+    </div>
+    <div class="avatar">{{ (name or '?')[:2].upper() }}</div>
+  </div>
+</div>
+
+<div class="page">
+
+  {% if about %}
+  <section>
+    <h2 class="sec-title">About</h2>
+    <p class="about-text">{{ about }}</p>
+  </section>
+  {% endif %}
+
+  {% if projects %}
+  <section>
+    <h2 class="sec-title">Projects</h2>
+    <div class="projects-grid">
+      {% for p in projects %}
+      <div class="project-card">
+        <div class="project-header">
+          <div class="project-name">{{ p.name }}</div>
+          {% if p.year %}<span class="project-year">{{ p.year }}</span>{% endif %}
+        </div>
+        {% if p.description %}<p class="project-desc">{{ p.description }}</p>{% endif %}
+        {% if p.tags %}
+        <div class="project-tags">
+          {% for t in p.tags %}<span class="project-tag">{{ t }}</span>{% endfor %}
+        </div>
+        {% endif %}
+        {% if p.url %}<a href="{{ p.url }}" class="project-link" target="_blank" rel="noopener">view project ↗</a>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;flex-wrap:wrap">
+
+    {% if skills %}
+    <section>
+      <h2 class="sec-title">Skills</h2>
+      <div class="skills-grid">
+        {% if skills is mapping %}
+          {% for cat, list in skills.items() %}
+          <div>
+            <div class="skill-group-label">{{ cat }}</div>
+            <div class="skill-tags">{% for s in list %}<span class="skill-tag">{{ s }}</span>{% endfor %}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="skill-tags">{% for s in skills %}<span class="skill-tag">{{ s }}</span>{% endfor %}</div>
+        {% endif %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if experience %}
+    <section>
+      <h2 class="sec-title">Experience</h2>
+      <div class="exp-list">
+        {% for e in experience %}
+        <div class="exp-item">
+          <div>
+            <div class="exp-role">{{ e.role }}</div>
+            <div class="exp-company">{{ e.company }}</div>
+          </div>
+          <div class="exp-dates">{{ e.start }}{% if e.end %} – {{ e.end }}{% endif %}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+  </div>
+
+</div>
+
+<footer>Built with <a href="https://plasmacat420.github.io/pagedIn/" target="_blank" rel="noopener">PagedIn</a></footer>
+</body>
+</html>

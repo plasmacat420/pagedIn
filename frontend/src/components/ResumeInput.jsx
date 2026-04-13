@@ -1,22 +1,17 @@
 import { useState, useRef } from 'react'
 import { parseResumeText, parseResumePdf } from '../api/client'
 
-const PLACEHOLDER = `John Doe
-Software Engineer | john@example.com | linkedin.com/in/johndoe
+const PLACEHOLDER = `Paste anything — resume, portfolio, business profile, band bio, nonprofit overview, event page, coaching practice, personal brand...
 
-SUMMARY
-Results-driven software engineer with 5+ years building scalable web applications...
+Examples that work:
+• A resume or CV
+• A developer or designer portfolio
+• A company / startup one-pager
+• A musician, athlete, or coach bio
+• A nonprofit or community org overview
+• An event or conference page
 
-EXPERIENCE
-Senior Software Engineer — Acme Corp (2022 – Present)
-• Led migration of monolith to microservices, reducing latency by 40%
-• Mentored 3 junior engineers
-
-SKILLS
-React, Node.js, Python, PostgreSQL, Docker, AWS
-
-EDUCATION
-B.S. Computer Science — MIT (2019)`
+PagedIn reads the document, figures out what it is, and builds the right kind of page automatically.`
 
 export default function ResumeInput({ onParsed, onError }) {
   const [mode, setMode] = useState('text') // 'text' | 'pdf'
@@ -66,10 +61,10 @@ export default function ResumeInput({ onParsed, onError }) {
 
       <div className="text-center mb-10">
         <h2 className="text-3xl font-bold text-white mb-3">
-          Paste your resume
+          Paste any document
         </h2>
-        <p className="text-slate-400">
-          Plain text or PDF — we'll handle the rest.
+        <p className="text-slate-400 max-w-md mx-auto">
+          Resume, portfolio, business profile, band bio, nonprofit — PagedIn figures out what it is and builds the right page.
         </p>
       </div>
 
@@ -175,11 +170,11 @@ export default function ResumeInput({ onParsed, onError }) {
             {loading ? (
               <>
                 <Spinner />
-                Parsing your resume…
+                Reading your document…
               </>
             ) : (
               <>
-                <span>Parse my resume</span>
+                <span>Build my page</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
