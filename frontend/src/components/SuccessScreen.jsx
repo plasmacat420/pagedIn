@@ -1,13 +1,12 @@
 import { useEffect, useState, useRef } from 'react'
 import confetti from 'canvas-confetti'
 
-// GitHub Pages typically goes live in 90–150s after the API call.
-// no-cors HEAD succeeds as soon as GitHub's servers respond — even with a 404 (still building).
-// So we wait LIVE_CONFIRM_DELAY_MS after first detection before declaring live.
-const PROGRESS_DURATION_MS = 150_000
-const POLL_INTERVAL_MS     = 10_000
-const INITIAL_POLL_DELAY   = 60_000   // don't bother before 60s
-const LIVE_CONFIRM_DELAY   = 25_000   // after server responds, wait 25s more before showing live
+// GitHub Pages CDN typically publishes 45–90s after the API call.
+// no-cors HEAD succeeds even on a 404 (still building), so we add a confirm buffer.
+const PROGRESS_DURATION_MS = 90_000
+const POLL_INTERVAL_MS     = 8_000
+const INITIAL_POLL_DELAY   = 35_000   // GitHub rarely publishes before 35s
+const LIVE_CONFIRM_DELAY   = 18_000   // buffer after first response to let CDN fully propagate
 
 export default function SuccessScreen({ url, onStartOver }) {
   const [copied, setCopied]   = useState(false)
@@ -120,12 +119,12 @@ export default function SuccessScreen({ url, onStartOver }) {
       </div>
 
       <h2 className="text-3xl font-bold text-white mb-2">
-        {isLive ? 'Your site is live! 🎉' : 'Deploying your site…'}
+        {isLive ? 'Your site is live! 🎉' : 'URL created — page publishing…'}
       </h2>
       <p className="text-slate-400 mb-8 max-w-sm text-sm">
         {isLive
           ? 'GitHub Pages is live. Share your link anywhere — it\'s yours forever.'
-          : 'GitHub is building your page. This usually takes 60–90 seconds.'}
+          : 'Your URL is ready. GitHub is publishing the page to their CDN — usually under 90 seconds.'}
       </p>
 
       {/* Deploy steps */}
