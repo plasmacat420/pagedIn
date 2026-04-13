@@ -119,6 +119,14 @@ export async function deploySelf(html, githubToken, firstName, honeypot = '') {
 }
 
 /**
+ * Fetch live deploy stats.
+ * Returns { pages_deployed }
+ */
+export async function getStats() {
+  return request('/stats', { method: 'GET' })
+}
+
+/**
  * Exchange a GitHub OAuth code for an access token.
  * Returns { access_token }
  */

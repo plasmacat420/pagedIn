@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from services.github_service import deploy_as_owner, deploy_as_user, exchange_code_for_token
 from utils.security import verify_deploy_token
+from utils import counter
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -54,6 +55,8 @@ async def deploy_pagedin(body: PagedinDeployRequest):
 
     try:
         url = await deploy_as_owner(body.html, body.parsed_name)
+        total = counter.increment()
+        logger.info(f"Deploy #{total} complete: {url}")
         return JSONResponse(content={"url": url})
     except RuntimeError as e:
         logger.error(f"Owner deploy error: {e}")
@@ -88,6 +91,8 @@ async def deploy_self(body: SelfDeployRequest):
 
     try:
         url = await deploy_as_user(body.html, body.github_token, body.first_name)
+        total = counter.increment()
+        logger.info(f"Deploy #{total} complete (self): {url}")
         return JSONResponse(content={"url": url})
     except RuntimeError as e:
         logger.error(f"Self deploy error: {e}")

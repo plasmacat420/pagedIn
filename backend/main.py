@@ -16,6 +16,7 @@ load_dotenv()
 from routers import parse, generate, deploy
 from middleware.rate_limit import RateLimitMiddleware
 from middleware.security import SecurityMiddleware
+from utils import counter
 
 logging.basicConfig(
     level=logging.INFO,
@@ -92,6 +93,12 @@ app.include_router(deploy.router)
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "pagedin-backend", "version": "1.0.0"}
+
+
+# ── Stats (public — used by frontend counter) ─────────────────────────────────
+@app.get("/stats")
+async def stats():
+    return {"pages_deployed": counter.total()}
 
 
 # ── Global error handler ─────────────────────────────────────────────────────
