@@ -1,17 +1,43 @@
 # PagedIn
 
-> **Paste your resume. Get a live website. Free, forever.**
+> **Paste your content. Get a live website. Free, forever.**
 
-PagedIn turns any resume (plain text or PDF) into a beautiful GitHub Pages site in under 60 seconds — no GitHub account required.
+PagedIn turns any document — resume, portfolio, business brief, or landing page copy — into a beautiful GitHub Pages site in under 60 seconds. No GitHub account required.
+
+---
+
+## Features
+
+- **4 document types** — resume, portfolio, business, landing page
+- **8 self-contained templates** — light and dark variant for each doc type
+- **AI-powered parsing** — Claude AI structures your pasted text or uploaded PDF
+- **Dual-theme preview** — both variants generated in parallel before you choose
+- **Two deploy paths** — one-click via PagedIn's hosting account, or to your own GitHub via OAuth
+- **Live deploy counter** — real-time site count on the hero
+- **Live status checker** — confirms your site is live after deploy
+- **Security-first** — HMAC-signed deploy tokens, honeypot bots, IP rate limiting, prompt-injection rejection
 
 ---
 
 ## How it works
 
-1. Paste resume text or upload a PDF
-2. Claude AI parses and structures the data
-3. Preview the generated site (two themes available)
-4. One-click deploy to GitHub Pages — either via the PagedIn hosting account or your own GitHub
+1. Paste text or upload a PDF
+2. Claude AI detects the doc type and structures the data
+3. Preview both light and dark themes side-by-side
+4. One-click deploy to GitHub Pages
+
+---
+
+## Templates
+
+| Doc type | Light | Dark |
+|---|---|---|
+| Resume | `minimal_light` | `modern_dark` |
+| Portfolio | `portfolio_light` | `portfolio_dark` |
+| Business | `business_light` | `business_dark` |
+| Landing page | `landing_light` | `landing_dark` |
+
+All templates are fully self-contained HTML — no external dependencies, works offline.
 
 ---
 
@@ -21,7 +47,7 @@ PagedIn turns any resume (plain text or PDF) into a beautiful GitHub Pages site 
 pagedIn/
 ├── backend/          FastAPI app (deploy to Render)
 │   ├── main.py
-│   ├── routers/      parse, generate, deploy endpoints
+│   ├── routers/      parse, generate, deploy, stats endpoints
 │   ├── services/     Claude, GitHub, template services
 │   ├── middleware/   rate limiting, security
 │   └── utils/        HMAC signing
@@ -30,12 +56,10 @@ pagedIn/
 │       ├── App.jsx
 │       ├── components/
 │       └── api/
-├── templates/        Jinja2 resume site themes
-│   ├── minimal_light.html
-│   └── modern_dark.html
+├── templates/        Jinja2 resume site themes (8 total)
 ├── render.yaml       Render deployment config
 └── .github/
-    └── workflows/    GitHub Actions for frontend deploy
+    └── workflows/    GitHub Actions for frontend + backend deploy
 ```
 
 ---
@@ -57,13 +81,12 @@ python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-# Copy and fill in env vars
-cp .env.example .env
+cp .env.example .env           # fill in env vars
 
 uvicorn main:app --reload --port 8000
 ```
 
-Visit http://localhost:8000/docs for the interactive API docs.
+Visit http://localhost:8000/docs for interactive API docs.
 
 ### Frontend
 
@@ -71,8 +94,7 @@ Visit http://localhost:8000/docs for the interactive API docs.
 cd frontend
 npm install
 
-# Copy and fill in env vars
-cp .env.example .env
+cp .env.example .env           # fill in env vars
 
 npm run dev
 ```
@@ -122,12 +144,12 @@ Visit http://localhost:5173
 
 ## Rate limits
 
-| Endpoint           | Limit              |
-|--------------------|--------------------|
-| POST /parse        | 3 requests / hour  |
-| POST /generate     | 3 requests / hour  |
-| POST /deploy/pagedin | 2 deploys / day  |
-| POST /deploy/self  | 3 deploys / day    |
+| Endpoint             | Limit               |
+|----------------------|---------------------|
+| POST /parse          | 5 requests / hour   |
+| POST /generate       | 10 requests / hour  |
+| POST /deploy/pagedin | 2 deploys / day     |
+| POST /deploy/self    | 3 deploys / day     |
 
 Uses a sliding window algorithm. Backed by Redis in production, in-memory in dev. Set `REDIS_URL` for production.
 
@@ -139,7 +161,7 @@ Uses a sliding window algorithm. Backed by Redis in production, in-memory in dev
 
 | Variable | Required | Description |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | Yes | Claude API key for resume parsing |
+| `ANTHROPIC_API_KEY` | Yes | Claude API key for document parsing |
 | `GITHUB_OWNER_TOKEN` | Yes | GitHub PAT for owner deployment account |
 | `GITHUB_OWNER_ORG` | Yes | GitHub org/user for hosted sites |
 | `GITHUB_CLIENT_ID` | Yes | OAuth App client ID |
@@ -158,27 +180,23 @@ Uses a sliding window algorithm. Backed by Redis in production, in-memory in dev
 
 ---
 
-## Themes
-
-| Theme | Description |
-|---|---|
-| `minimal_light` | Clean white, serif headings, subtle shadows — classic résumé feel |
-| `modern_dark` | Dark background, monospace accent, developer portfolio aesthetic |
-
-Both themes are fully self-contained HTML files — no external dependencies, works offline.
-
----
-
 ## Security
 
 - IP-based sliding window rate limiting on all POST endpoints
 - HMAC-signed deploy tokens prevent arbitrary HTML being deployed to the owner GitHub account
 - Honeypot fields catch automated bots (silent fake-success response)
+- Prompt-injection detection rejects adversarial resume inputs
 - 50 KB request size limit on parse/generate
 - User-agent filtering rejects known bot patterns
 - All abuse attempts logged server-side
 - CORS restricted to frontend origin only
 - GitHub OAuth tokens stored in frontend memory only (not localStorage)
+
+---
+
+## License
+
+Source-available with a commercial revenue-share clause. See [LICENSE](LICENSE) for details.
 
 ---
 
